@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'post.apps.PostConfig',
     'api.apps.ApiConfig',
     'rest_framework',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -103,12 +104,19 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': ["rest_framework.authentication.SessionAuthentication"],
+    'DEFAULT_AUTHENTICATION_CLASSES': ["rest_framework.authentication.SessionAuthentication",
+                                       "rest_framework.authentication.TokenAuthentication"],
     # 'DEFAULT_PAGINATION_CLASS': "rest_framework.pagination.LimitOffsetPagination",
-    # "PAGE_SIZE": 4
-    'DEFAULT_RENDERER_CLASSES': (
+    'DEFAULT_PAGINATION_CLASS': "api.pagination.CursorSetPagination",
+    "PAGE_SIZE": 4,
 
-    ),
+    'DEFAULT_RENDERER_CLASSES': [
+        # 'rest_framework.renderers.JSONRenderer',
+        # 'rest_framework.renderers.BrowsableAPIRenderer',
+        'api.renderers.ApiRenderer',
+
+
+    ]
 }
 
 

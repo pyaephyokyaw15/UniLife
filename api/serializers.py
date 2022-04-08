@@ -17,7 +17,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        # validated_data['owner'] = request.user
+        validated_data['owner'] = request.user
         obj = super().create(validated_data)
         return obj
 

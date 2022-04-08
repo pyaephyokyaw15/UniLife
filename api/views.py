@@ -5,6 +5,8 @@ from post.models import Post
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
+from .renderers import ApiPaginationRenderer
+from .permission import UserPermissionsObj
 
 
 # Create your views here.
@@ -12,6 +14,8 @@ class PostListAPIView(generics.ListAPIView):
     # /api/post/list/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    renderer_classes = [ApiPaginationRenderer]
+
 
     # def list(self, request, *args, **kwargs):
     #     response = super().list(request, *args, **kwargs)
@@ -23,15 +27,16 @@ class PostListAPIView(generics.ListAPIView):
 
 
 class UserPostListAPIView(generics.ListAPIView):
-    # /api/<int:user_id>/post/list/
+    # /api/user/<str:username>/
     serializer_class = PostSerializer
     queryset = Post.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
 
-    # def get_queryset(self, **kwargs):
-    #     print(kwargs)
-    #     # owner = User.objects.get(id=)
-    #     qs = super().get_queryset()
-    #     return qs.filter()
+    def get_queryset(self):
+        user = self.request.user
+        # owner = User.objects.get(id=)
+        qs = super().get_queryset()
+        return qs.filter(owner=user)
 
 
 class PostDetailAPIView(generics.RetrieveAPIView):
@@ -53,6 +58,7 @@ class PostCreateAPIView(generics.CreateAPIView):
     # /api/post/create/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     # def create(self, request, *args, **kwargs):
     #     response = super().create(request, *args, **kwargs)
@@ -70,6 +76,8 @@ class PostUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = PostSerializer
     lookup_field = 'pk'
 
+    permission_classes = [UserPermissionsObj]
+
     # def update(self, request, *args, **kwargs):
     #     response = super().update(request, *args, **kwargs)
     #     custom_response = dict()
@@ -85,5 +93,9 @@ class PostDeleteAPIView(generics.DestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     lookup_field = 'pk'
+
+    permission_classes = [UserPermissionsObj]
+
+
 
 
