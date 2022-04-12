@@ -3,6 +3,7 @@ from . import views
 from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
+    path('', views.documentation, name='api-documentation'),
     path('auth/', obtain_auth_token),
     path('post/list/', views.PostListAPIView.as_view(), name='api-post-list'),
     # path('<my>/post/list/', views.UserPostListAPIView.as_view(), name='api-user-post-list'),

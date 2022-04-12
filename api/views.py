@@ -5,16 +5,20 @@ from post.models import Post
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
-from .renderers import ApiPaginationRenderer
+from .renderers import CustomRenderer
 from .permission import UserPermissionsObj
 
 
 # Create your views here.
+def documentation(request):
+    return render(request, 'documentation.html')
+
+
 class PostListAPIView(generics.ListAPIView):
-    # /api/post/list/
+    # GET /api/post/list/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    renderer_classes = [ApiPaginationRenderer]
+    # renderer_classes = [CustomPaginationRenderer]
 
 
     # def list(self, request, *args, **kwargs):
