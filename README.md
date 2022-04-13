@@ -50,7 +50,7 @@ Unilife API.
 ### Update a post
 
 ```
-  PUT /api/post/${id}/update
+  PUT /api/post/${id}/update/
 ```
 
 #### Header Parameters
@@ -62,7 +62,7 @@ Unilife API.
 ### Delete a post
 
 ```
-  DELETE /api/post/${id}/delete
+  DELETE /api/post/${id}/delete/
 ```
 #### Header Parameters
 
