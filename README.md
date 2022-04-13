@@ -44,7 +44,7 @@ Unilife API.
 
 | Key                   | Value                             |
 | :--------------       |:--------------------------------  |            
-| `Authorization`       |Token <token>                      |
+| `Authorization`       |Token {token}                      |
 
 
 ### Update a post
@@ -57,7 +57,7 @@ Unilife API.
 
 | Key                   | Value                             |
 | :--------------       |:--------------------------------  |            
-| `Authorization`       |Token <token>                      |
+| `Authorization`       |Token {token}                      |
 
 ### Delete a post
 
@@ -68,7 +68,7 @@ Unilife API.
 
 | Key                   | Value                             |
 | :--------------       |:--------------------------------  |            
-| `Authorization`       |Token <token>                      |
+| `Authorization`       |Token {token}                      |
 
 
 ### Generate a Token
