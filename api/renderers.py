@@ -35,7 +35,7 @@ class CustomRenderer(renderers.JSONRenderer):
         status_code = renderer_context['response'].status_code
         message = status_code_mapper(status_code)
 
-        if data.get('detail'):  # check error
+        if data.get('detail'):  # check whether there is an error or not
             response = json.dumps({'result': None, 'errors': data, 'status_code': status_code, 'message': message})
         else:
             result = dict()

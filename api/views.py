@@ -1,27 +1,21 @@
 from django.shortcuts import render
-from rest_framework import authentication, generics, mixins, permissions
+from rest_framework import authentication, generics, permissions
 from .serializers import PostSerializer
 from post.models import Post
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
-from .renderers import CustomRenderer
-from .permission import UserPermissionsObj
+from .permission import UserPostPermissions
 
 
 # Create your views here.
-def documentation(request):
-    return render(request, 'documentation.html')
-
-
 class PostListAPIView(generics.ListAPIView):
     # GET /api/post/list/
-    queryset = Post.objects.all()
     serializer_class = PostSerializer
-    # renderer_classes = [CustomPaginationRenderer]
-
+    queryset = Post.objects.all()
 
     # def list(self, request, *args, **kwargs):
+    #     # you can override this method to get the required api response instead of custom renderer.
     #     response = super().list(request, *args, **kwargs)
     #     custom_response = dict()
     #     custom_response["result"] = {"data": response.data}
@@ -31,24 +25,24 @@ class PostListAPIView(generics.ListAPIView):
 
 
 class UserPostListAPIView(generics.ListAPIView):
-    # /api/user/<str:username>/
+    # /api/user/<int:pk>/posts/
     serializer_class = PostSerializer
     queryset = Post.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        user = self.request.user
+    def get_queryset(self):  # override the method
+        user = self.kwargs.get('pk')
         # owner = User.objects.get(id=)
         qs = super().get_queryset()
-        return qs.filter(owner=user)
+        return qs.filter(author=user)
 
 
 class PostDetailAPIView(generics.RetrieveAPIView):
     # /api/post/<int:pk>
-    queryset = Post.objects.all()
     serializer_class = PostSerializer
+    queryset = Post.objects.all()
 
     # def get(self, request, *args, **kwargs):
+    #     # you can override this method to get the required api response instead of custom renderer.
     #     response = super().retrieve(request, *args, **kwargs)
     #     custom_response = dict()
     #     print('Data', response.data)
@@ -65,6 +59,7 @@ class PostCreateAPIView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     # def create(self, request, *args, **kwargs):
+    #     # you can override this method to get the required api response instead of custom renderer.
     #     response = super().create(request, *args, **kwargs)
     #     custom_response = dict()
     #     print('Data', response.data)
@@ -78,11 +73,11 @@ class PostUpdateAPIView(generics.RetrieveUpdateAPIView):
     # /api/post/<int:pk>/update/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    lookup_field = 'pk'
-
-    permission_classes = [UserPermissionsObj]
+    # lookup_field = 'pk'
+    permission_classes = [UserPostPermissions]
 
     # def update(self, request, *args, **kwargs):
+    #     # you can override this method to get the required api response instead of custom renderer.
     #     response = super().update(request, *args, **kwargs)
     #     custom_response = dict()
     #     print('Data', response.data)
@@ -96,10 +91,5 @@ class PostDeleteAPIView(generics.DestroyAPIView):
     # api/products/<int:pk>/delete/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    lookup_field = 'pk'
-
-    permission_classes = [UserPermissionsObj]
-
-
-
-
+    # lookup_field = 'pk'
+    permission_classes = [UserPostPermissions]
