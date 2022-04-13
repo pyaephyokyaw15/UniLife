@@ -38,7 +38,7 @@ Unilife API.
 ### Create a post
 
 ```
-  POST /api/post/create
+  POST /api/post/create/
 ```
 #### Header Parameters
 
