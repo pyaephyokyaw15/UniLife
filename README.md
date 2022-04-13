@@ -9,13 +9,13 @@ Unilife API.
 ### Get all posts
 
 ```
-  GET /api/post/list
+  GET /api/post/list/
 ```
 
 ### Get a certain post
 
 ```
-  GET /api/post/{id}
+  GET /api/post/{id}/
 ```
 #### Path Parameters
 
@@ -27,7 +27,7 @@ Unilife API.
 ### Get a certain user's posts
 
 ```
-  GET /api/user/${id}/posts
+  GET /api/user/${id}/posts/
 ```
 #### Path Parameters 
 
@@ -74,7 +74,7 @@ Unilife API.
 ### Generate a Token
 
 ```
-  POST  /api/auth
+  POST  /api/auth/
 ```
 
 
