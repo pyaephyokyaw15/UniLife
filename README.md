@@ -1,64 +1,80 @@
-# UniLife
-A blog where one shares his uni life.
-
-
 
 # Project Title
 
 A brief description of what this project does and who it's for
 
 
-## API Reference
+# REST API
 
-#### Get all posts
+## Get all posts
 
 ```http
   GET /api/post/list
 ```
 
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `api_key` | `string` | **Required**. Your API key |
-
-
-#### Get a post
+## Get a certain post
 
 ```http
-  GET /api/post/${id}
+  GET /api/post/{id}
 ```
+#### Path Parameters
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
-| `id`      | `string` | **Required**. Id of item to fetch |
+| `id`      | `integer` | **Required**. Id of item to fetch |
 
-
-#### Create a post
+## Get a certain user's posts
 
 ```http
-  GET /api/post/create
+  GET /api/user/${id}/posts
 ```
+#### Path Parameters 
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
-| `id`      | `string` | **Required**. Id of item to fetch |
+| `id`      | `integer` | **Required**. Id of user to fetch |
 
-
-#### Update a post
-
-```http
-  GET /api/post/${id}/update
-```
-
-| Parameter | Type     | Description                       |
-| :-------- | :------- | :-------------------------------- |
-| `id`      | `string` | **Required**. Id of item to fetch |
-
-#### Delete a post
+### Create a post
 
 ```http
-  GET /api/post/${id}/delete
+  POST /api/post/create
+```
+#### Header Parameters
+
+| Key                   | Value                             |
+| :--------------       |:--------------------------------  |            |
+| `Authorization`       |Token <token>                      |
+
+
+### Update a post
+
+```http
+  PUT /api/post/${id}/update
 ```
 
-| Parameter | Type     | Description                       |
-| :-------- | :------- | :-------------------------------- |
-| `id`      | `string` | **Required**. Id of item to fetch |
+#### Header Parameters
+
+| Key                   | Value                             |
+| :--------------       |:--------------------------------  |            |
+| `Authorization`       |Token <token>                      |
+
+### Delete a post
+
+```http
+  DELETE /api/post/${id}/delete
+```
+#### Header Parameters
+
+| Key                   | Value                             |
+| :--------------       |:--------------------------------  |            |
+| `Authorization`       |Token <token>                      |
+
+
+### Generate a Token
+
+```http
+  POST  /api/auth
+```
+
+
+
