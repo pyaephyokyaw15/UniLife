@@ -39,10 +39,11 @@ class CustomRenderer(renderers.JSONRenderer):
             response = json.dumps({'result': None, 'errors': data, 'status_code': status_code, 'message': message})
         else:
             result = dict()
-            if data.get('results'):
+            if 'results' in data:
                 # check whether pagination is used
                 # if pagination is used, data dict has 'results' key and store data in it.
 
+                print('Exit Results:', data['results'])
                 result['data'] = data['results']
 
                 pagination = dict()
