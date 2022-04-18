@@ -1,7 +1,7 @@
 
 # Unilife
 
-Unilife API.
+Unilife app is a mobile app where we share our unilife with others.
 
 
 ## REST API
