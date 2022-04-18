@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from post.models import Post
+from drf_extra_fields.fields import Base64ImageField
 
 
 class AuthorInfoSerializer(serializers.Serializer):
@@ -10,10 +11,11 @@ class AuthorInfoSerializer(serializers.Serializer):
 
 class PostSerializer(serializers.ModelSerializer):
     posted_by = AuthorInfoSerializer(source='author', read_only=True)
+    banner = Base64ImageField(required=False)
 
     class Meta:
         model = Post
-        fields = ['posted_by', 'title', 'content', 'date_posted']
+        fields = ['posted_by', 'title', 'content', 'date_posted', 'banner']
 
     def create(self, validated_data):  # override the create method
         request = self.context.get('request')
