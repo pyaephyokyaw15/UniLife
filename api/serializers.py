@@ -15,7 +15,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['posted_by', 'title', 'content', 'created_date', 'image']
+        fields = ['id', 'posted_by', 'title', 'content', 'created_date', 'image']
 
     def create(self, validated_data):  # override the create method
         request = self.context.get('request')
