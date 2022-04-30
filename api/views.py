@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
 from .permission import UserPostPermissions
+from .renderers import CustomRenderer
 
 
 # Create your views here.
@@ -13,6 +14,7 @@ class PostListAPIView(generics.ListAPIView):
     # GET /api/post/list/
     serializer_class = PostSerializer
     queryset = Post.objects.all()
+    renderer_classes = [CustomRenderer]
 
     # def list(self, request, *args, **kwargs):
     #     # you can override this method to get the required api response instead of custom renderer.

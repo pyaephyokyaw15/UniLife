@@ -4,6 +4,46 @@ from rest_framework.utils import json
 import re
 
 
+class CustomRenderer(renderers.JSONRenderer):
+
+
+    charset = 'utf-8'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):  # override the render method.
+        print('Data', data)
+        # print('string Data', str(data))
+        # print('render_context', renderer_context)
+        # print(renderer_context['response'])
+
+        status_code = renderer_context['response'].status_code
+        message = ''
+        error_message = data.get('detail')
+        result = None
+
+        if error_message:  # check whether there is an error or not
+            response = json.dumps({'result': result, 'status_code': status_code, 'message': error_message})
+        else:
+            # status_code
+            if status_code == 200:
+                message = 'OK'
+            elif status_code == 201:
+                message = 'Created'
+            elif status_code == 202:
+                message = 'Accepted'
+            elif status_code == 204:
+                message = 'No Content'
+
+            # result
+            if 'ErrorDetail' in str(data):
+                message = data
+            response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
+
+        return response
+
+
+
+
+
 def status_code_mapper(status_code):
     # map common HTTP status codes to message
     if status_code == 200:
@@ -25,7 +65,7 @@ def status_code_mapper(status_code):
     return message
 
 
-class CustomRenderer(renderers.JSONRenderer):
+class ACustomRenderer(renderers.JSONRenderer):
     charset = 'utf-8'
 
     def render(self, data, accepted_media_type=None, renderer_context=None):  # override the render method.
@@ -103,3 +143,5 @@ class CustomRenderer(renderers.JSONRenderer):
 #         else:
 #             response = json.dumps({'result': data, 'status_code': status_code, 'message': message})
 #     return response
+
+

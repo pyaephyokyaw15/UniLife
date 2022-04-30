@@ -19,7 +19,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):  # override the create method
         request = self.context.get('request')
-        validated_data['author'] = request.user  # assign the author to current user
+        validated_data['author'] = request.user  # assign the author to the current user
         obj = super().create(validated_data)
         return obj
 
