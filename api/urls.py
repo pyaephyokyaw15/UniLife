@@ -4,7 +4,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     # starts with api/
-    path('auth/', obtain_auth_token),
+    path('auth/', views.CreateTokenView.as_view()),
     path('post/list/', views.PostListAPIView.as_view(), name='api-post-list'),
     path('post/<int:pk>/', views.PostDetailAPIView.as_view(), name='api-post-detail'),
     path('post/create/', views.PostCreateAPIView.as_view(), name='api-post-create'),

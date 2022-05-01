@@ -20,10 +20,10 @@ class CustomRenderer(renderers.JSONRenderer):
         error_message = data.get('detail')
         result = None
 
-        if error_message:  # check whether there is an error or not
+        if error_message:  # if there is an error, return null and error code
             response = json.dumps({'result': result, 'status_code': status_code, 'message': error_message})
-        else:
-            # status_code
+        else:  # if there is no error
+            # map message according to status_code
             if status_code == 200:
                 message = 'OK'
             elif status_code == 201:
@@ -34,8 +34,50 @@ class CustomRenderer(renderers.JSONRenderer):
                 message = 'No Content'
 
             # result
-            if 'ErrorDetail' in str(data):
+            if 'ErrorDetail' in str(data):  # if there is exception, assign data into message
                 message = data
+            else:  # if there is no exception, assign data into result
+                result = dict()
+                if 'results' in data:
+                    # check whether pagination is used
+                    # if pagination is used, data dict has 'results' key and store data in it.
+
+                    print('Exit Results:', data['results'])
+                    result['data'] = data['results']
+
+                    pagination = dict()
+                    # pagination["count"] = data["count"]
+
+                    page_regex = re.compile(r'.*page=(\d+)')  # regex to retrieve only page number
+
+                    next_page_url = data["next"]
+                    if next_page_url:
+                        next_page_id_search = page_regex.search(next_page_url)
+                        next_page_id = int(next_page_id_search.group(1))
+                    else:
+                        next_page_id = None
+
+                    previous_page_url = data["previous"]
+                    if previous_page_url:
+                        previous_page_id_search = page_regex.search(previous_page_url)
+                        if previous_page_id_search:
+                            previous_page_id = int(previous_page_id_search.group(1))
+                        else:
+                            # if page=1, page query is not included in url.
+                            # Using regex, group() method will throw an error.
+                            # So, avoid this method and assign 1 to id.
+                            previous_page_id = 1
+                    else:
+                        previous_page_id = None
+
+                    pagination["next_page"] = next_page_id
+                    pagination["previous_page"] = previous_page_id
+
+                    result['pagination'] = pagination
+
+                else:
+                    # if pagination is not used,
+                    result = data
             response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
 
         return response

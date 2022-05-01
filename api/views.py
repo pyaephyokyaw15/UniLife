@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .permission import UserPostPermissions
 from .renderers import CustomRenderer
+from rest_framework.authtoken.views import ObtainAuthToken # obtain_auth_token
 
 
 # Create your views here.
@@ -14,7 +15,6 @@ class PostListAPIView(generics.ListAPIView):
     # GET /api/post/list/
     serializer_class = PostSerializer
     queryset = Post.objects.all()
-    renderer_classes = [CustomRenderer]
 
     # def list(self, request, *args, **kwargs):
     #     # you can override this method to get the required api response instead of custom renderer.
@@ -95,3 +95,8 @@ class PostDeleteAPIView(generics.DestroyAPIView):
     serializer_class = PostSerializer
     # lookup_field = 'pk'
     permission_classes = [UserPostPermissions]
+
+
+class CreateTokenView(ObtainAuthToken):
+    """Create a new auth token for the user"""
+    renderer_classes = [CustomRenderer]
