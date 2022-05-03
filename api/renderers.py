@@ -1,189 +1,114 @@
-# from rest_framework.renderers import BaseRenderer
 from rest_framework import renderers
 from rest_framework.utils import json
 import re
 
 
-class CustomRenderer(renderers.JSONRenderer):
-
-
+class CustomApiRenderer(renderers.JSONRenderer):
     charset = 'utf-8'
 
     def render(self, data, accepted_media_type=None, renderer_context=None):  # override the render method.
         print('Data', data)
+        print('Context', renderer_context['request'])
+        method = renderer_context['request'].method
+        # print('string Data', str(data))
+        # print('render_context', renderer_context)
+        # print(renderer_context['response'])
+
+        result = None
+        status_code = renderer_context['response'].status_code
+        message = ''
+
+        if data:  # for not delete cases. (in delete case, there is no response data)
+            error_message = data.get('detail')
+
+            if error_message:  # if there is an error, return null and error code
+                response = json.dumps({'result': result, 'status_code': status_code, 'message': error_message})
+                return response
+            else:  # if there is no error
+                # map message according to status_code and frontend requirement
+                if status_code == 200:
+                    if method == 'PUT':
+                        message = 'Successfully Updated'
+                    else:
+                        message = 'OK'
+                elif status_code == 201:
+                    message = 'Successfully Created'
+                elif status_code == 202:
+                    message = 'Accepted'
+                elif status_code == 204:
+                    message = 'Successfully Deleted'
+
+                # result
+                if 'ErrorDetail' in str(data):  # if there is an exception, assign data into message
+                    message = data
+                else:  # if there is no exception, assign data into result
+                    result = dict()
+                    if 'results' in data:
+                        # check whether pagination is used
+                        # if pagination is used, data dict has 'results' key and store data in it.
+
+                        # print('Results:', data['results'])
+                        result['data'] = data['results']
+
+                        pagination = dict()
+                        # pagination["count"] = data["count"]
+
+                        page_regex = re.compile(r'.*page=(\d+)')  # regex to retrieve only page number
+
+                        next_page_url = data["next"]
+                        if next_page_url:
+                            next_page_id_search = page_regex.search(next_page_url)
+                            next_page_id = int(next_page_id_search.group(1))
+                        else:
+                            next_page_id = None
+
+                        previous_page_url = data["previous"]
+                        if previous_page_url:
+                            previous_page_id_search = page_regex.search(previous_page_url)
+                            if previous_page_id_search:
+                                previous_page_id = int(previous_page_id_search.group(1))
+                            else:
+                                # if page=1, page query is not included in url.
+                                # Using regex, group() method will throw an error.
+                                # So, avoid this method and assign 1 to id.
+                                previous_page_id = 1
+                        else:
+                            previous_page_id = None
+
+                        pagination["next_page"] = next_page_id
+                        pagination["previous_page"] = previous_page_id
+
+                        result['pagination'] = pagination
+
+                    else:
+                        # if pagination is not used,
+                        result = data
+        else:   # there is no response data.(delete case)
+            message = 'Successfully deleted'
+        response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
+        return response
+
+
+class CustomAuthApiRenderer(renderers.JSONRenderer):
+    charset = 'utf-8'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):  # override the render method.
+        print('Data', data)
+        print('Context', renderer_context['request'])
         # print('string Data', str(data))
         # print('render_context', renderer_context)
         # print(renderer_context['response'])
 
         status_code = renderer_context['response'].status_code
-        message = ''
-        error_message = data.get('detail')
         result = None
 
-        if error_message:  # if there is an error, return null and error code
-            response = json.dumps({'result': result, 'status_code': status_code, 'message': error_message})
-        else:  # if there is no error
-            # map message according to status_code
-            if status_code == 200:
-                message = 'OK'
-            elif status_code == 201:
-                message = 'Created'
-            elif status_code == 202:
-                message = 'Accepted'
-            elif status_code == 204:
-                message = 'No Content'
+        if 'ErrorDetail' in str(data):  # if there is an exception, assign data into message
+            message = data['non_field_errors'][0]
+        else:  # if there is no exception, assign data into result
+            result = data
+            message = 'OK'
 
-            # result
-            if 'ErrorDetail' in str(data):  # if there is exception, assign data into message
-                message = data
-            else:  # if there is no exception, assign data into result
-                result = dict()
-                if 'results' in data:
-                    # check whether pagination is used
-                    # if pagination is used, data dict has 'results' key and store data in it.
-
-                    print('Exit Results:', data['results'])
-                    result['data'] = data['results']
-
-                    pagination = dict()
-                    # pagination["count"] = data["count"]
-
-                    page_regex = re.compile(r'.*page=(\d+)')  # regex to retrieve only page number
-
-                    next_page_url = data["next"]
-                    if next_page_url:
-                        next_page_id_search = page_regex.search(next_page_url)
-                        next_page_id = int(next_page_id_search.group(1))
-                    else:
-                        next_page_id = None
-
-                    previous_page_url = data["previous"]
-                    if previous_page_url:
-                        previous_page_id_search = page_regex.search(previous_page_url)
-                        if previous_page_id_search:
-                            previous_page_id = int(previous_page_id_search.group(1))
-                        else:
-                            # if page=1, page query is not included in url.
-                            # Using regex, group() method will throw an error.
-                            # So, avoid this method and assign 1 to id.
-                            previous_page_id = 1
-                    else:
-                        previous_page_id = None
-
-                    pagination["next_page"] = next_page_id
-                    pagination["previous_page"] = previous_page_id
-
-                    result['pagination'] = pagination
-
-                else:
-                    # if pagination is not used,
-                    result = data
-            response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
-
+        response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
         return response
-
-
-
-
-
-def status_code_mapper(status_code):
-    # map common HTTP status codes to message
-    if status_code == 200:
-        message = 'OK'
-    elif status_code == 201:
-        message = 'Created'
-    elif status_code == 202:
-        message = 'Accepted'
-    elif status_code == 204:
-        message = 'No Content'
-    elif status_code == 400:
-        message = 'Bad Request'
-    elif status_code == 403:
-        message = 'Forbidden'
-    elif status_code == 404:
-        message = 'Not Found'
-    elif status_code == 405:
-        message = 'Method Not Allowed'
-    return message
-
-
-class ACustomRenderer(renderers.JSONRenderer):
-    charset = 'utf-8'
-
-    def render(self, data, accepted_media_type=None, renderer_context=None):  # override the render method.
-        # print(data)
-        # print(str(data))
-        # print(renderer_context['response'])
-        status_code = renderer_context['response'].status_code
-        message = status_code_mapper(status_code)
-
-        if data.get('detail'):  # check whether there is an error or not
-            response = json.dumps({'result': None, 'errors': data, 'status_code': status_code, 'message': message})
-        else:
-            result = dict()
-            if 'results' in data:
-                # check whether pagination is used
-                # if pagination is used, data dict has 'results' key and store data in it.
-
-                print('Exit Results:', data['results'])
-                result['data'] = data['results']
-
-                pagination = dict()
-                # pagination["count"] = data["count"]
-
-                page_regex = re.compile(r'.*page=(\d+)')  # regex to retrieve only page number
-
-                next_page_url = data["next"]
-                if next_page_url:
-                    next_page_id_search = page_regex.search(next_page_url)
-                    next_page_id = int(next_page_id_search.group(1))
-                else:
-                    next_page_id = None
-
-                previous_page_url = data["previous"]
-                if previous_page_url:
-                    previous_page_id_search = page_regex.search(previous_page_url)
-                    if previous_page_id_search:
-                        previous_page_id = int(previous_page_id_search.group(1))
-                    else:
-                        # if page=1, page query is not included in url.
-                        # Using regex, group() method will throw an error.
-                        # So, avoid this method and assign 1 to id.
-                        previous_page_id = 1
-                else:
-                    previous_page_id = None
-
-                pagination["next_page"] = next_page_id
-                pagination["previous_page"] = previous_page_id
-
-                result['pagination'] = pagination
-
-            else:
-                # if pagination is not used,
-                result = data
-
-            response = json.dumps({'result': result, 'status_code': status_code,
-                                   'message': message})
-        return response
-
-
-# class CustomApiRenderer(renderers.JSONRenderer):
-#     charset = 'utf-8'
-#
-#     def render(self, data, accepted_media_type=None, renderer_context=None):
-#         response = ''
-#         print(data)
-#         print(renderer_context['response'])
-#         status_code = renderer_context['response'].status_code
-#         message = status_code_mapper(status_code)
-#
-#         if 'ErrorDetail' in str(data):
-#             if status_code == 404:
-#                 response = json.dumps({'result': None, 'status_code': status_code, 'message': message})
-#             else:
-#                response = json.dumps({'result': None, 'errors': data, 'status_code': status_code, 'message': message})
-#         else:
-#             response = json.dumps({'result': data, 'status_code': status_code, 'message': message})
-#     return response
 
 

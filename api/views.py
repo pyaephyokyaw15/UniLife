@@ -1,13 +1,13 @@
-from django.shortcuts import render
 from rest_framework import authentication, generics, permissions
-from .serializers import PostSerializer
+# from rest_framework.renderers import JSONRenderer
+from .serializers import PostSerializer, CustomAuthTokenSerializer
 from post.models import Post
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from rest_framework.response import Response
-from rest_framework import status
 from .permission import UserPostPermissions
-from .renderers import CustomRenderer
-from rest_framework.authtoken.views import ObtainAuthToken # obtain_auth_token
+from .renderers import CustomAuthApiRenderer
+from rest_framework.authtoken.views import ObtainAuthToken  # obtain_auth_token
+from rest_framework.authtoken.models import Token
 
 
 # Create your views here.
@@ -27,7 +27,7 @@ class PostListAPIView(generics.ListAPIView):
 
 
 class UserPostListAPIView(generics.ListAPIView):
-    # /api/user/<int:pk>/posts/
+    # GET /api/user/<int:pk>/posts/
     serializer_class = PostSerializer
     queryset = Post.objects.all()
 
@@ -95,8 +95,20 @@ class PostDeleteAPIView(generics.DestroyAPIView):
     serializer_class = PostSerializer
     # lookup_field = 'pk'
     permission_classes = [UserPostPermissions]
+    # renderer_classes = [DeleteApiRenderer]
 
 
 class CreateTokenView(ObtainAuthToken):
-    """Create a new auth token for the user"""
-    renderer_classes = [CustomRenderer]
+    """Override the default ObtainAuthToken"""
+    renderer_classes = [CustomAuthApiRenderer]
+    serializer_class = CustomAuthTokenSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key, 'username': user.username})
+
+
+
