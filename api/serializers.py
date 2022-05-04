@@ -3,16 +3,17 @@ from post.models import Post
 from drf_extra_fields.fields import Base64ImageField
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 
 
-class AuthorInfoSerializer(serializers.Serializer):
-    username = serializers.CharField(read_only=True)
+class UserInfoSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
     email = serializers.CharField(read_only=True)
 
 
 class PostSerializer(serializers.ModelSerializer):
-    posted_by = AuthorInfoSerializer(source='author', read_only=True)
+    posted_by = UserInfoSerializer(source='author', read_only=True)
     image = Base64ImageField(required=False)
 
     class Meta:
@@ -35,7 +36,8 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         label=_("Password"),
         style={'input_type': 'password'},
         trim_whitespace=False,
-        write_only=True
+        write_only=True,
+        # required=False
     )
     token = serializers.CharField(
         label=_("Token"),
@@ -60,5 +62,19 @@ class CustomAuthTokenSerializer(serializers.Serializer):
             msg = _('Must include "username" and "password".')
             raise serializers.ValidationError(msg, code='authorization')
 
+        # print('Attrs', attrs)
         attrs['user'] = user
+        # print(attrs)
         return attrs
+
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    # def create(self, validated_data):
+    #     user = User.objects.create_user(validated_data['username'], validated_data['email'], validated_data['password'])
+    #     print('Created User', user)
+    #     return user

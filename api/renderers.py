@@ -7,8 +7,8 @@ class CustomApiRenderer(renderers.JSONRenderer):
     charset = 'utf-8'
 
     def render(self, data, accepted_media_type=None, renderer_context=None):  # override the render method.
-        print('Data', data)
-        print('Context', renderer_context['request'])
+        # print('Data', data)
+        # print('Context', renderer_context['request'])
         method = renderer_context['request'].method
         # print('string Data', str(data))
         # print('render_context', renderer_context)
@@ -40,7 +40,11 @@ class CustomApiRenderer(renderers.JSONRenderer):
 
                 # result
                 if 'ErrorDetail' in str(data):  # if there is an exception, assign data into message
-                    message = data
+                    # print(data)
+                    # print(data.values())
+                    # message = data
+                    message_list = list(data.values())[0]  # convert order_dict to list
+                    message = '\n'.join(message_list)
                 else:  # if there is no exception, assign data into result
                     result = dict()
                     if 'results' in data:
@@ -89,26 +93,37 @@ class CustomApiRenderer(renderers.JSONRenderer):
         return response
 
 
-class CustomAuthApiRenderer(renderers.JSONRenderer):
-    charset = 'utf-8'
-
-    def render(self, data, accepted_media_type=None, renderer_context=None):  # override the render method.
-        print('Data', data)
-        print('Context', renderer_context['request'])
-        # print('string Data', str(data))
-        # print('render_context', renderer_context)
-        # print(renderer_context['response'])
-
-        status_code = renderer_context['response'].status_code
-        result = None
-
-        if 'ErrorDetail' in str(data):  # if there is an exception, assign data into message
-            message = data['non_field_errors'][0]
-        else:  # if there is no exception, assign data into result
-            result = data
-            message = 'OK'
-
-        response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
-        return response
+# class CustomAuthApiRenderer(renderers.JSONRenderer):
+#     charset = 'utf-8'
+#
+#     def render(self, data, accepted_media_type=None, renderer_context=None):  # override the render method.
+#         print('Data', data)
+#         print('Context', renderer_context['request'])
+#         print('Test', data)
+#         print(type(data))
+#         print('Test', list(data.values()))
+#         # print('string Data', str(data))
+#         # print('render_context', renderer_context)
+#         # print(renderer_context['response'])
+#
+#         status_code = renderer_context['response'].status_code
+#         result = None
+#
+#         error_message = data.get('detail')
+#
+#         if error_message:  # if there is an error
+#             response = json.dumps({'result': result, 'status_code': status_code, 'message': error_message})
+#
+#         else:
+#             if 'ErrorDetail' in str(data):  # if there is an exception, assign data into message
+#                 message_list = list(data.values())[0]
+#                 message = '\n'.join(message_list)
+#
+#             else:  # if there is no exception, assign data into result
+#                 result = data
+#                 message = 'OK'
+#
+#             response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
+#         return response
 
 

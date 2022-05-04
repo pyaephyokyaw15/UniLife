@@ -1,11 +1,11 @@
 from rest_framework import authentication, generics, permissions
 # from rest_framework.renderers import JSONRenderer
-from .serializers import PostSerializer, CustomAuthTokenSerializer
+from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer
 from post.models import Post
 # from django.contrib.auth.models import User
 from rest_framework.response import Response
 from .permission import UserPostPermissions
-from .renderers import CustomAuthApiRenderer
+from .renderers import CustomApiRenderer
 from rest_framework.authtoken.views import ObtainAuthToken  # obtain_auth_token
 from rest_framework.authtoken.models import Token
 
@@ -39,7 +39,7 @@ class UserPostListAPIView(generics.ListAPIView):
 
 
 class PostDetailAPIView(generics.RetrieveAPIView):
-    # /api/post/<int:pk>
+    # GET /api/post/<int:pk>
     serializer_class = PostSerializer
     queryset = Post.objects.all()
 
@@ -55,7 +55,7 @@ class PostDetailAPIView(generics.RetrieveAPIView):
 
 
 class PostCreateAPIView(generics.CreateAPIView):
-    # /api/post/create/
+    # POST /api/post/create/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -72,7 +72,7 @@ class PostCreateAPIView(generics.CreateAPIView):
 
 
 class PostUpdateAPIView(generics.RetrieveUpdateAPIView):
-    # /api/post/<int:pk>/update/
+    # PUT /api/post/<int:pk>/update/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     # lookup_field = 'pk'
@@ -90,17 +90,16 @@ class PostUpdateAPIView(generics.RetrieveUpdateAPIView):
 
 
 class PostDeleteAPIView(generics.DestroyAPIView):
-    # api/products/<int:pk>/delete/
+    # DELETE api/products/<int:pk>/delete/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     # lookup_field = 'pk'
     permission_classes = [UserPostPermissions]
-    # renderer_classes = [DeleteApiRenderer]
 
 
-class CreateTokenView(ObtainAuthToken):
-    """Override the default ObtainAuthToken"""
-    renderer_classes = [CustomAuthApiRenderer]
+class CreateTokenView(ObtainAuthToken):  # Override the default ObtainAuthToken
+    # POST api/auth/token/
+    renderer_classes = [CustomApiRenderer]
     serializer_class = CustomAuthTokenSerializer
 
     def post(self, request, *args, **kwargs):
@@ -108,7 +107,27 @@ class CreateTokenView(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'username': user.username})
+        return Response({
+            # "user": UserInfoSerializer(user, context=self.get_serializer_context()).data,
+            "user": UserInfoSerializer(user).data,
+            "token": token.key
+        })
 
 
 
+
+class UserRegisterAPIView(generics.GenericAPIView):
+    # POST api/auth/register
+    serializer_class = UserRegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        # print('Request Data', request.data)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            # "user": UserInfoSerializer(user, context=self.get_serializer_context()).data,
+            "user": UserInfoSerializer(user).data,
+            "token": token.key
+        })
