@@ -55,32 +55,11 @@ class CustomApiRenderer(renderers.JSONRenderer):
                         result['data'] = data['results']
 
                         pagination = dict()
-                        # pagination["count"] = data["count"]
 
-                        page_regex = re.compile(r'.*page=(\d+)')  # regex to retrieve only page number
-
-                        next_page_url = data["next"]
-                        if next_page_url:
-                            next_page_id_search = page_regex.search(next_page_url)
-                            next_page_id = int(next_page_id_search.group(1))
-                        else:
-                            next_page_id = None
-
-                        previous_page_url = data["previous"]
-                        if previous_page_url:
-                            previous_page_id_search = page_regex.search(previous_page_url)
-                            if previous_page_id_search:
-                                previous_page_id = int(previous_page_id_search.group(1))
-                            else:
-                                # if page=1, page query is not included in url.
-                                # Using regex, group() method will throw an error.
-                                # So, avoid this method and assign 1 to id.
-                                previous_page_id = 1
-                        else:
-                            previous_page_id = None
-
-                        pagination["next_page"] = next_page_id
-                        pagination["previous_page"] = previous_page_id
+                        pagination["total_pages"] = data["total_pages"]
+                        pagination["current_page"] = data["current_page"]
+                        pagination["next_page"] = data["next_page"]
+                        pagination["previous_page"] = data["previous_page"]
 
                         result['pagination'] = pagination
 
