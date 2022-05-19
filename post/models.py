@@ -11,4 +11,7 @@ class Post(models.Model):
     content = models.TextField()
     created_date = models.DateTimeField(default=timezone.now, editable=False)
 
+    class Meta:
+        ordering = ["-created_date"]
+
 
