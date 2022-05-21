@@ -40,6 +40,18 @@ class UserPostListAPIView(generics.ListAPIView):
         return qs.filter(author=user)
 
 
+class SavedPostListAPIView(generics.ListAPIView):
+    # GET /api/user/<int:pk>/posts/
+    serializer_class = PostSerializer
+    queryset = Post.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):  # override the method
+
+        qs = super().get_queryset()
+        return qs.filter(saved_by=self.request.user)
+
+
 class PostDetailAPIView(generics.RetrieveAPIView):
     # GET /api/post/<int:pk>
     serializer_class = PostSerializer
@@ -142,9 +154,24 @@ class UserRegisterAPIView(generics.GenericAPIView):
 
 
 
-class Logout(APIView):
+class LogoutAPIView(APIView):
     def get(self, request):
         # not found in documentation
         # Checking User and Token Table. It is one-to-one relationship.
         request.user.auth_token.delete()  # simply delete the token to force a login
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PostSaveActionAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        pk = kwargs['pk']
+        post = Post.objects.get(pk=pk)
+
+        if post in request.user.saved_posts.all():
+            request.user.saved_posts.remove(post)
+            return Response({"state": "unsaved"}, status=status.HTTP_200_OK)
+        else:
+            request.user.saved_posts.add(post)
+            return Response({"state": "saved"}, status=status.HTTP_200_OK)
+
