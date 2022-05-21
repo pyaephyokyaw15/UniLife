@@ -16,9 +16,10 @@ class PostSerializer(serializers.ModelSerializer):
     posted_by = UserInfoSerializer(source='author', read_only=True)
     image = Base64ImageField(required=False)
 
+
     class Meta:
         model = Post
-        fields = ['id', 'posted_by', 'title', 'content', 'created_date', 'image']
+        fields = ['id', 'posted_by', 'title', 'content', 'created_date', 'image', 'like_counts']
 
     def create(self, validated_data):  # override the create method
         request = self.context.get('request')

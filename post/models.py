@@ -11,8 +11,12 @@ class Post(models.Model):
     content = models.TextField()
     created_date = models.DateTimeField(default=timezone.now, editable=False)
     saved_by = models.ManyToManyField(User, related_name="saved_posts", blank=True)
+    liked_by = models.ManyToManyField(User, related_name="liked_posts", blank=True)
 
     class Meta:
         ordering = ["-created_date"]
 
+    @property
+    def like_counts(self):
+        return self.liked_by.count
 

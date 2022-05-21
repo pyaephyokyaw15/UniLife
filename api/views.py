@@ -175,3 +175,17 @@ class PostSaveActionAPIView(APIView):
             request.user.saved_posts.add(post)
             return Response({"state": "saved"}, status=status.HTTP_200_OK)
 
+
+class PostLikeActionAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs['pk']
+        post = Post.objects.get(pk=pk)
+
+        if post in request.user.liked_posts.all():
+            request.user.liked_posts.remove(post)
+            return Response({"state": "unliked"}, status=status.HTTP_200_OK)
+        else:
+            request.user.liked_posts.add(post)
+            return Response({"state": "liked"}, status=status.HTTP_200_OK)
