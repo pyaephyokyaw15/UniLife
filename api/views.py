@@ -8,7 +8,9 @@ from .permission import UserPostPermissions
 from .renderers import CustomApiRenderer
 from rest_framework.authtoken.views import ObtainAuthToken  # obtain_auth_token
 from rest_framework.authtoken.models import Token
-
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.response import Response
 
 # Create your views here.
 class PostListAPIView(generics.ListAPIView):
@@ -124,10 +126,25 @@ class UserRegisterAPIView(generics.GenericAPIView):
         # print('Request Data', request.data)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        print(serializer)
         user = serializer.save()
+        print(user)
+        print(user.password)
         token, created = Token.objects.get_or_create(user=user)
+
+
         return Response({
             # "user": UserInfoSerializer(user, context=self.get_serializer_context()).data,
             "user": UserInfoSerializer(user).data,
             "token": token.key
         })
+
+
+
+
+class Logout(APIView):
+    def get(self, request):
+        # not found in documentation
+        # Checking User and Token Table. It is one-to-one relationship.
+        request.user.auth_token.delete()  # simply delete the token to force a login
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -20,6 +20,7 @@ class CustomApiRenderer(renderers.JSONRenderer):
 
         if data:  # for not delete cases. (in delete case, there is no response data)
             error_message = data.get('detail')
+            # print("In here")
 
             if error_message:  # if there is an error, return null and error code
                 response = json.dumps({'result': result, 'status_code': status_code, 'message': error_message})
