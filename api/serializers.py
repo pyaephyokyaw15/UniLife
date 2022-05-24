@@ -14,7 +14,7 @@ class UserInfoSerializer(serializers.Serializer):
 
 class PostSerializer(serializers.ModelSerializer):
     posted_by = UserInfoSerializer(source='author', read_only=True)
-    image = Base64ImageField(required=False)
+    image = Base64ImageField(allow_null=True)
 
 
     class Meta:
