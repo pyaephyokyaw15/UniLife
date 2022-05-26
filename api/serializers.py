@@ -15,6 +15,8 @@ class UserInfoSerializer(serializers.Serializer):
 class PostSerializer(serializers.ModelSerializer):
     posted_by = UserInfoSerializer(source='author', read_only=True)
     image = Base64ImageField(allow_null=True)
+    # is_liked = serializers.BooleanField(default=False)
+    # is_saved = serializers.BooleanField(default=False)
 
 
     class Meta:
@@ -22,10 +24,41 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ['id', 'posted_by', 'title', 'content', 'created_date', 'image', 'like_counts']
 
     def create(self, validated_data):  # override the create method
+        print(validated_data)
         request = self.context.get('request')
+
         validated_data['author'] = request.user  # assign the author to the current user
+        print(validated_data)
         obj = super().create(validated_data)
         return obj
+
+    # def to_internal_value(self, data):
+    #     request = self.context.get('request')
+    #     data['title'] = "hello"
+    #     data['test'] = "test"
+    #     print(data)
+    #
+    #     return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        user = request.user
+        representation = super().to_representation(instance)
+        representation['is_liked'] = False
+        representation['is_saved'] = False
+        print(user)
+        if not user.is_anonymous:
+            print(instance)
+
+            # check liked or not for the current user
+            if instance in user.liked_posts.all():
+                representation['is_liked'] = True
+
+
+            if instance in user.saved_posts.all():
+                representation['is_saved'] = True
+
+        return representation
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):

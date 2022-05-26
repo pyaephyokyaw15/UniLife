@@ -190,3 +190,4 @@ class PostLikeActionAPIView(APIView):
         else:
             request.user.liked_posts.add(post)
             return Response({"state": "liked"}, status=status.HTTP_200_OK)
+

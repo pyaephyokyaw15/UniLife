@@ -2,18 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2e473c3b-2b99-48ad-8153-4f11a18c8137" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/api/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/serializers.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/api/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0002_rename_owner_post_author.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0003_post_banner.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0004_rename_date_posted_post_created_date_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0005_alter_post_options_post_saved_by_alter_post_author.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0006_alter_post_author_alter_post_saved_by.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0007_alter_post_saved_by.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0008_post_like_counts.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/post/migrations/0009_remove_post_like_counts_post_liked_by.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/post/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/post/models.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -48,7 +40,7 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "/home/pyaephyokyaw/liveplaza",
+    "last_opened_file_path": "/home/pyaephyokyaw/Django/UniLife",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
