@@ -1,5 +1,6 @@
+import rest_framework.renderers
 from rest_framework import authentication, generics, permissions
-# from rest_framework.renderers import JSONRenderer
+from rest_framework.renderers import JSONRenderer
 from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer
 from post.models import Post
 # from django.contrib.auth.models import User
@@ -75,6 +76,13 @@ class PostCreateAPIView(generics.CreateAPIView):
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(None, status=status.HTTP_201_CREATED, headers=headers)
+
     # def create(self, request, *args, **kwargs):
     #     # you can override this method to get the required api response instead of custom renderer.
     #     response = super().create(request, *args, **kwargs)
@@ -86,13 +94,26 @@ class PostCreateAPIView(generics.CreateAPIView):
     #     return Response(custom_response, status=status.HTTP_201_CREATED)
 
 
-class PostUpdateAPIView(generics.RetrieveUpdateAPIView):
+class PostUpdateAPIView(generics.UpdateAPIView):
     # PUT /api/post/<int:pk>/update/
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     # lookup_field = 'pk'
     permission_classes = [UserPostPermissions]
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(None)
 
     # def update(self, request, *args, **kwargs):
     #     # you can override this method to get the required api response instead of custom renderer.
@@ -166,20 +187,23 @@ class LogoutAPIView(APIView):
 
 class PostSaveActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [rest_framework.renderers.JSONRenderer]
+
     def get(self, request, *args, **kwargs):
         pk = kwargs['pk']
         post = Post.objects.get(pk=pk)
 
         if post in request.user.saved_posts.all():
             request.user.saved_posts.remove(post)
-            return Response({"state": "unsaved"}, status=status.HTTP_200_OK)
+            return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unsaved"}, status=status.HTTP_200_OK)
         else:
             request.user.saved_posts.add(post)
-            return Response({"state": "saved"}, status=status.HTTP_200_OK)
+            return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "saved"}, status=status.HTTP_200_OK)
 
 
 class PostLikeActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [rest_framework.renderers.JSONRenderer]
 
     def get(self, request, *args, **kwargs):
         pk = kwargs['pk']
@@ -187,10 +211,10 @@ class PostLikeActionAPIView(APIView):
 
         if post in request.user.liked_posts.all():
             request.user.liked_posts.remove(post)
-            return Response({"state": "unliked"}, status=status.HTTP_200_OK)
+            return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unliked"}, status=status.HTTP_200_OK)
         else:
             request.user.liked_posts.add(post)
-            return Response({"state": "liked"}, status=status.HTTP_200_OK)
+            return Response({"result": None, "status-code": status.HTTP_200_OK, "message": "liked"}, status=status.HTTP_200_OK)
 
 
 

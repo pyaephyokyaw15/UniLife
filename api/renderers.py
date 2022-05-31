@@ -16,7 +16,7 @@ class CustomApiRenderer(renderers.JSONRenderer):
 
         result = None
         status_code = renderer_context['response'].status_code
-
+        message = ''
 
         if data:  # for not delete cases. (in delete case, there is no response data)
             error_message = data.get('detail')
@@ -27,17 +27,7 @@ class CustomApiRenderer(renderers.JSONRenderer):
                 return response
             else:  # if there is no error
                 # map message according to status_code and frontend requirement
-                if status_code == 200:
-                    if method == 'PUT':
-                        message = 'Successfully Updated'
-                    else:
-                        message = 'OK'
-                elif status_code == 201:
-                    message = 'Successfully Created'
-                elif status_code == 202:
-                    message = 'Accepted'
-                elif status_code == 204:
-                    message = 'Successfully Deleted'
+
 
                 # result
                 if 'ErrorDetail' in str(data):  # if there is an exception, assign data into message
@@ -67,9 +57,22 @@ class CustomApiRenderer(renderers.JSONRenderer):
                     else:
                         # if pagination is not used,
                         result = data
-        else:   # there is no response data.(delete case)
-            if status_code == 204:
-                message = 'Successfully deleted'
+
+        if status_code == 204:
+            message = 'Successfully deleted'
+
+        elif status_code == 200:
+            if method == 'PUT':
+                message = 'Successfully Updated'
+            else:
+                message = 'OK'
+        elif status_code == 201:
+            message = 'Successfully Created'
+        elif status_code == 202:
+            message = 'Accepted'
+        elif status_code == 204:
+            message = 'Successfully Deleted'
+
         response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
         return response
 
