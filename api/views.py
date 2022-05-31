@@ -93,6 +93,7 @@ class PostUpdateAPIView(generics.RetrieveUpdateAPIView):
     # lookup_field = 'pk'
     permission_classes = [UserPostPermissions]
 
+
     # def update(self, request, *args, **kwargs):
     #     # you can override this method to get the required api response instead of custom renderer.
     #     response = super().update(request, *args, **kwargs)
@@ -190,4 +191,6 @@ class PostLikeActionAPIView(APIView):
         else:
             request.user.liked_posts.add(post)
             return Response({"state": "liked"}, status=status.HTTP_200_OK)
+
+
 

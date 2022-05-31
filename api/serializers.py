@@ -46,6 +46,7 @@ class PostSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['is_liked'] = False
         representation['is_saved'] = False
+        representation['is_owner'] = False
         print(user)
         if not user.is_anonymous:
             print(instance)
@@ -58,7 +59,12 @@ class PostSerializer(serializers.ModelSerializer):
             if instance in user.saved_posts.all():
                 representation['is_saved'] = True
 
+            if instance in user.posts.all():
+                representation['is_owner'] = True
+
         return representation
+
+
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):

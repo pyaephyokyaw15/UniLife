@@ -20,3 +20,4 @@ class Post(models.Model):
     def like_counts(self):
         return self.liked_by.count
 
+

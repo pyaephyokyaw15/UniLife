@@ -16,7 +16,7 @@ class CustomApiRenderer(renderers.JSONRenderer):
 
         result = None
         status_code = renderer_context['response'].status_code
-        message = ''
+
 
         if data:  # for not delete cases. (in delete case, there is no response data)
             error_message = data.get('detail')
@@ -68,7 +68,8 @@ class CustomApiRenderer(renderers.JSONRenderer):
                         # if pagination is not used,
                         result = data
         else:   # there is no response data.(delete case)
-            message = 'Successfully deleted'
+            if status_code == 204:
+                message = 'Successfully deleted'
         response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
         return response
 
