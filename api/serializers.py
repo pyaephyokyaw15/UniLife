@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from post.models import Post
+from post.models import Post, Comment
 from drf_extra_fields.fields import Base64ImageField
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
@@ -12,16 +12,53 @@ class UserInfoSerializer(serializers.Serializer):
     email = serializers.CharField(read_only=True)
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    commented_by = UserInfoSerializer(source='owner', read_only=True)
+
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'comment', 'commented_by', 'created_date', 'post']
+
+    def create(self, validated_data):  # override the create method
+        print(validated_data)
+        request = self.context.get('request')
+
+        validated_data['owner'] = request.user  # assign the author to the current user
+        print(validated_data)
+        obj = super().create(validated_data)
+        return obj
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        user = request.user
+        representation = super().to_representation(instance)
+
+        representation['is_owner'] = False
+        print(user)
+        if not user.is_anonymous:
+            print(instance)
+
+            if instance in user.comments.all():
+                representation['is_owner'] = True
+
+        return representation
+
+
+
 class PostSerializer(serializers.ModelSerializer):
     posted_by = UserInfoSerializer(source='author', read_only=True)
     image = Base64ImageField(allow_null=True)
     # is_liked = serializers.BooleanField(default=False)
     # is_saved = serializers.BooleanField(default=False)
+    # comments = CommentSerializer()
+
+    comments = CommentSerializer(many=True, read_only=True)
 
 
     class Meta:
         model = Post
-        fields = ['id', 'posted_by', 'title', 'content', 'created_date', 'image', 'like_counts']
+        fields = ['id', 'posted_by', 'title', 'content', 'created_date', 'image', 'like_counts', 'comments']
 
     def create(self, validated_data):  # override the create method
         print(validated_data)
@@ -123,3 +160,5 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+

@@ -15,6 +15,10 @@ urlpatterns = [
     path('post/<int:pk>/delete/', views.PostDeleteAPIView.as_view(), name='post-delete'),
     path('post/<int:pk>/save/', views.PostSaveActionAPIView.as_view(), name='post-save'),
     path('post/<int:pk>/like/', views.PostLikeActionAPIView.as_view(), name='post-like'),
+
+    path('comment/create/', views.CommentCreateAPIView.as_view(), name='comment-create'),
+    path('comment/<int:pk>/update/', views.CommentUpdateAPIView.as_view(), name='comment-update'),
+    path('comment/<int:pk>/delete/', views.CommentDeleteAPIView.as_view(), name='comment-delete'),
     path('user/<int:pk>/posts/', views.UserPostListAPIView.as_view(), name='user-post-list'),
     path('auth/logout/', views.LogoutAPIView.as_view()),
 ]

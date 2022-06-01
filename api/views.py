@@ -1,10 +1,10 @@
 from rest_framework import authentication, generics, permissions
 # from rest_framework.renderers import JSONRenderer
-from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer
-from post.models import Post
+from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer, CommentSerializer
+from post.models import Post, Comment
 # from django.contrib.auth.models import User
 from rest_framework.response import Response
-from .permission import UserPostPermissions
+from .permission import UserPostPermissions, UserCommentPermissions
 from .renderers import CustomApiRenderer
 from rest_framework.authtoken.views import ObtainAuthToken  # obtain_auth_token
 from rest_framework.authtoken.models import Token
@@ -194,3 +194,24 @@ class PostLikeActionAPIView(APIView):
 
 
 
+class CommentCreateAPIView(generics.CreateAPIView):
+    # POST /api/post/create/
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class CommentDeleteAPIView(generics.DestroyAPIView):
+    # DELETE api/products/<int:pk>/delete/
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    # lookup_field = 'pk'
+    permission_classes = [UserCommentPermissions]
+
+
+class CommentUpdateAPIView(generics.RetrieveUpdateAPIView):
+    # PUT /api/post/<int:pk>/update/
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    # lookup_field = 'pk'
+    permission_classes = [UserCommentPermissions]
