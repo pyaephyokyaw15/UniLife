@@ -21,3 +21,12 @@ class Post(models.Model):
         return self.liked_by.count
 
 
+class Comment(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
+    comment = models.TextField()
+    created_date = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_date"]
+

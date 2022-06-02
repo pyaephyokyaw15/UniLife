@@ -1,11 +1,11 @@
 import rest_framework.renderers
 from rest_framework import authentication, generics, permissions
 from rest_framework.renderers import JSONRenderer
-from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer
-from post.models import Post
+from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer, PostDetailSerializer, CommentSerializer
+from post.models import Post, Comment
 # from django.contrib.auth.models import User
 from rest_framework.response import Response
-from .permission import UserPostPermissions
+from .permission import UserPostPermissions, UserCommentPermissions
 from .renderers import CustomApiRenderer
 from rest_framework.authtoken.views import ObtainAuthToken  # obtain_auth_token
 from rest_framework.authtoken.models import Token
@@ -56,7 +56,7 @@ class SavedPostListAPIView(generics.ListAPIView):
 
 class PostDetailAPIView(generics.RetrieveAPIView):
     # GET /api/post/<int:pk>
-    serializer_class = PostSerializer
+    serializer_class = PostDetailSerializer
     queryset = Post.objects.all()
 
     # def get(self, request, *args, **kwargs):
@@ -218,3 +218,45 @@ class PostLikeActionAPIView(APIView):
 
 
 
+class CommentCreateAPIView(generics.CreateAPIView):
+    # POST /api/post/create/
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(None, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class CommentDeleteAPIView(generics.DestroyAPIView):
+    # DELETE api/products/<int:pk>/delete/
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    # lookup_field = 'pk'
+    permission_classes = [UserCommentPermissions]
+
+
+class CommentUpdateAPIView(generics.RetrieveUpdateAPIView):
+    # PUT /api/post/<int:pk>/update/
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    # lookup_field = 'pk'
+    permission_classes = [UserCommentPermissions]
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(None)
