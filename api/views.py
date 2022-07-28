@@ -19,6 +19,7 @@ class PostListAPIView(generics.ListAPIView):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
 
+
     # def list(self, request, *args, **kwargs):
     #     # you can override this method to get the required api response instead of custom renderer.
     #     response = super().list(request, *args, **kwargs)

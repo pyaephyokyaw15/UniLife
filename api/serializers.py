@@ -15,7 +15,6 @@ class UserInfoSerializer(serializers.Serializer):
 class CommentSerializer(serializers.ModelSerializer):
     commented_by = UserInfoSerializer(source='owner', read_only=True)
 
-
     class Meta:
         model = Comment
         fields = ['id', 'comment', 'commented_by', 'created_date', 'post']
