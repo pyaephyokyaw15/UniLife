@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'post.apps.PostConfig',
     'api.apps.ApiConfig',
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'accounts.apps.AccountsConfig'
 ]
 
 MIDDLEWARE = [
@@ -141,3 +142,5 @@ MEDIA_URL = 'media/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = "accounts.User"

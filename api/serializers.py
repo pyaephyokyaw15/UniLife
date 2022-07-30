@@ -3,13 +3,19 @@ from post.models import Post, Comment
 from drf_extra_fields.fields import Base64ImageField
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
+from django.conf import settings
+from accounts.models import User
+
 
 
 class UserInfoSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     username = serializers.CharField(read_only=True)
-    email = serializers.CharField(read_only=True)
+    first_name = serializers.CharField(read_only=True)
+    last_name = serializers.CharField(read_only=True)
+    profile_picture = Base64ImageField(allow_null=True)
+    university = serializers.CharField(read_only=True)
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -192,16 +198,20 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    profile_picture = Base64ImageField(allow_null=True)
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['username', 'password', 'first_name', 'last_name', 'university', 'profile_picture']
+        # extra_kwargs = {'password': {'write_only': True}}
 
     # https://www.django-rest-framework.org/api-guide/serializers/#additional-keyword-arguments
     def create(self, validated_data):
         user = User(
-            email=validated_data['email'],
-            username=validated_data['username']
+            username=validated_data['username'],
+            first_name = validated_data['first_name'],
+            last_name = validated_data['last_name'],
+            profile_picture = validated_data['profile_picture'],
+            university = validated_data['university']
         )
         user.set_password(validated_data['password'])
         user.save()
