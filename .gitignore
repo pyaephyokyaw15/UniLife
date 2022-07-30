@@ -1,6 +1,6 @@
 *.pyc
 *.sqlite3
-__pycache__
+__pycache__/
 note.txt
 media
 .idea/
