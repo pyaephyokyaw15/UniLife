@@ -111,8 +111,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': "api.pagination.CustomPagination",
     "PAGE_SIZE": 10,
     'DEFAULT_RENDERER_CLASSES': [
-        # 'rest_framework.renderers.JSONRenderer',
-        # 'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
         'api.renderers.CustomApiRenderer'
     ]
 }

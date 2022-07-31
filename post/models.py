@@ -1,14 +1,14 @@
 from django.db import models
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.utils import timezone
-from django.core.validators import MinLengthValidator
 from django.conf import settings
+
 
 # Create your models here.
 class Post(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts")
-    image = models.ImageField(null=True)   # , upload_to='banner'
-    title = models.CharField(max_length=100)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts")
+    image = models.ImageField(null=True, blank=True)
+    title = models.CharField(max_length=200)
     content = models.TextField()
     created_date = models.DateTimeField(default=timezone.now, editable=False)
     saved_by = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="saved_posts", blank=True)
@@ -19,7 +19,11 @@ class Post(models.Model):
 
     @property
     def like_counts(self):
-        return self.liked_by.count
+        return self.liked_by.count()
+
+    @property
+    def comment_counts(self):
+        return self.comments.count()
 
 
 class Comment(models.Model):
@@ -30,4 +34,3 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ["-created_date"]
-
