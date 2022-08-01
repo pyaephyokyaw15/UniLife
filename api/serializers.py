@@ -24,6 +24,10 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'comment', 'owner', 'created_date', 'post', 'url']
         read_only_fields = ['created_date']
+        extra_kwargs = {
+            "comment": {"error_messages": {"required": "comment is required"}},
+            "post": {"error_messages": {"required": "post is required"}},
+        }
 
     def create(self, validated_data):  # override the create method
         print(validated_data)
@@ -60,7 +64,7 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'url']
         extra_kwargs = {
             "title": {"error_messages": {"required": "Title is required"}},
-            "content": {"error_messages": {"required": "Content is required"}}
+            "content": {"error_messages": {"required": "Content is required"}},
         }
 
 
@@ -156,6 +160,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'password', 'first_name', 'last_name', 'university', 'profile_picture']
+        extra_kwargs = {
+            "username": {"error_messages": {"required": "username is required"}},
+            "password": {"error_messages": {"required": "password is required"}},
+            "first_name": {"required": True, "error_messages": {"required": "first_name is required"}},
+            "last_name": {"required": True, "error_messages": {"required": "last_name is required"}},
+            "university": {"required": True, "error_messages": {"required": "university is required"}}
+        }
 
     # https://www.django-rest-framework.org/api-guide/serializers/#additional-keyword-arguments
     def create(self, validated_data):

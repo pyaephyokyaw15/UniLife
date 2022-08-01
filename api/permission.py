@@ -11,7 +11,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         """
         Return `True` if permission is granted, `False` otherwise.
         """
-        if request.user.is_authenticated:
+        if request.user.is_authenticated or (request.method in permissions.SAFE_METHODS):
             return True
 
         return False

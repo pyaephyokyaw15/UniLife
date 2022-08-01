@@ -13,6 +13,8 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from accounts.models import User
+from django.urls import reverse
+from django.db.models import Q
 
 
 # Create your views here.
@@ -31,6 +33,7 @@ class PostViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         saved = "saved" in self.request.query_params
         username = self.request.query_params.get("username")
+        q = self.request.query_params.get("q")
         queryset = self.queryset
         if saved:
             if self.request.user.is_authenticated:
@@ -41,6 +44,9 @@ class PostViewSet(viewsets.ModelViewSet):
         if username:
             queryset = queryset.filter(owner__username=username)
 
+        if q:
+            queryset = queryset.filter(Q(title__icontains=q) | Q(owner__username__icontains=q))
+
         return queryset
 
 
@@ -48,6 +54,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Manage recipes in the database"""
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
+    permission_classes = [IsOwnerOrReadOnly]
 
 
 class UserViewSet(viewsets.GenericViewSet,
@@ -57,6 +64,7 @@ class UserViewSet(viewsets.GenericViewSet,
     """Manage recipes in the database"""
     serializer_class = UserInfoSerializer
     queryset = User.objects.all()
+    permission_classes = [IsOwnerOrReadOnly]
 
 
 class CreateTokenView(ObtainAuthToken):
@@ -117,19 +125,10 @@ class UserRegisterAPIView(generics.GenericAPIView):
         })
 
 
-# class LogoutAPIView(APIView):
-#     def get(self, request):
-#         # not found in documentation(for me)
-#         # Checking User and Token Table. It is one-to-one relationship.
-#         request.user.auth_token.delete()  # simply delete the token to force a login
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 class PostSaveActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    renderer_classes = [rest_framework.renderers.JSONRenderer]
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
         post = Post.objects.get(pk=pk)
 
@@ -143,9 +142,8 @@ class PostSaveActionAPIView(APIView):
 
 class PostLikeActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    renderer_classes = [rest_framework.renderers.JSONRenderer]
 
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
         post = Post.objects.get(pk=pk)
 
