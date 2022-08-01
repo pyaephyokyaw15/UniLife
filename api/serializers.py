@@ -58,6 +58,11 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'url']
+        extra_kwargs = {
+            "title": {"error_messages": {"required": "Title is required"}},
+            "content": {"error_messages": {"required": "Content is required"}}
+        }
+
 
     def create(self, validated_data):  # override the create method
         print(validated_data)
@@ -151,7 +156,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'password', 'first_name', 'last_name', 'university', 'profile_picture']
-        extra_kwargs = {'password': {'write_only': True}}
 
     # https://www.django-rest-framework.org/api-guide/serializers/#additional-keyword-arguments
     def create(self, validated_data):
