@@ -61,9 +61,10 @@ class UserViewSet(viewsets.GenericViewSet,
 
 class CreateTokenView(ObtainAuthToken):
     # POST api/v2/auth/token/
-    # renderer_classes = [CustomApiRenderer]
+    renderer_classes = [CustomApiRenderer]
     serializer_class = CustomAuthTokenSerializer
 
+    # generate token
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -74,6 +75,24 @@ class CreateTokenView(ObtainAuthToken):
             "user": UserInfoSerializer(user).data,
             "token": token.key
         })
+
+    def delete(self, request):
+        # not found in documentation(as far as I searched)
+        # Checking User and Token Table. It is one-to-one relationship.
+        request.user.auth_token.delete()  # simply delete the token to force a login
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+    def get_permissions(self):
+        # dynamically change the permission classes according to the request METHOD.
+
+        # To delete token , token must be provided in DELETE request.
+        if self.request.method == 'DELETE':
+            self.permission_classes = [permissions.IsAuthenticated]
+
+        return [permission() for permission in self.permission_classes]
+
 
 
 class UserRegisterAPIView(generics.GenericAPIView):
@@ -98,12 +117,12 @@ class UserRegisterAPIView(generics.GenericAPIView):
         })
 
 
-class LogoutAPIView(APIView):
-    def get(self, request):
-        # not found in documentation(for me)
-        # Checking User and Token Table. It is one-to-one relationship.
-        request.user.auth_token.delete()  # simply delete the token to force a login
-        return Response(status=status.HTTP_204_NO_CONTENT)
+# class LogoutAPIView(APIView):
+#     def get(self, request):
+#         # not found in documentation(for me)
+#         # Checking User and Token Table. It is one-to-one relationship.
+#         request.user.auth_token.delete()  # simply delete the token to force a login
+#         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PostSaveActionAPIView(APIView):
