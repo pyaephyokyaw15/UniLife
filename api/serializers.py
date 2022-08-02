@@ -9,11 +9,42 @@ from accounts.models import User
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
-
-
+    profile_picture = Base64ImageField(allow_null=True)
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'university', 'profile_picture']
+        read_only_fields = ['id', 'username']
+
+    def update(self, instance, validated_data):
+        print(validated_data)
+        image = instance.image
+        print("image", image)
+        user = super().update(instance, validated_data)
+        if not user.image:
+            # frontend send null if the image is not changed.
+            # If image is null, set image the current image.
+            user.image = image
+            user.save()
+        return user
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        # this serializer is also used in data return.
+        # In this case, request context does not exist.
+        try:
+            request = self.context.get('request')
+
+            # check the current profile it the current's user profile or not
+            if request.method == "GET":
+                user = request.user
+                if instance == user:
+                    representation['self_profile'] = True
+                else:
+                    representation['self_profile'] = False
+        except:
+            None
+        return representation
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -78,8 +109,19 @@ class PostSerializer(serializers.ModelSerializer):
         return obj
 
     def update(self, instance, validated_data):
-        # email = validated_data[liked]
-        return super().update(instance, validated_data)
+
+        print(validated_data)
+        image = instance.image
+        print("image", instance.image)
+        post = super().update(instance, validated_data)
+        if not post.image:
+            # frontend send null if the image is not changed.
+            # If image is null, set image the current image.
+            post.image = image
+            post.save()
+
+        return post
+
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -112,6 +154,30 @@ class PostDetailSerializer(PostSerializer):
     class Meta:
         model = Post
         fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'comments']
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        user = request.user
+        representation = super().to_representation(instance)
+        representation['is_liked'] = False
+        representation['is_saved'] = False
+        representation['is_owner'] = False
+        print(user)
+        if not user.is_anonymous:
+            print(instance)
+
+            # check liked or not for the current user
+            if instance in user.liked_posts.all():
+                representation['is_liked'] = True
+
+
+            if instance in user.saved_posts.all():
+                representation['is_saved'] = True
+
+            if instance in user.posts.all():
+                representation['is_owner'] = True
+
+        return representation
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):

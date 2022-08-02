@@ -5,7 +5,7 @@ from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegister
 from post.models import Post, Comment
 # from django.contrib.auth.models import User
 # from rest_framework.response import Response
-from .permission import  IsOwnerOrReadOnly
+from .permission import IsOwnerOrReadOnly, IsUserOrReadOnly
 from .renderers import CustomApiRenderer
 from rest_framework.authtoken.views import ObtainAuthToken  # obtain_auth_token
 from rest_framework.authtoken.models import Token
@@ -64,7 +64,7 @@ class UserViewSet(viewsets.GenericViewSet,
     """Manage recipes in the database"""
     serializer_class = UserInfoSerializer
     queryset = User.objects.all()
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsUserOrReadOnly]
 
 
 class CreateTokenView(ObtainAuthToken):
@@ -90,8 +90,6 @@ class CreateTokenView(ObtainAuthToken):
         request.user.auth_token.delete()  # simply delete the token to force a login
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-
     def get_permissions(self):
         # dynamically change the permission classes according to the request METHOD.
 
@@ -100,7 +98,6 @@ class CreateTokenView(ObtainAuthToken):
             self.permission_classes = [permissions.IsAuthenticated]
 
         return [permission() for permission in self.permission_classes]
-
 
 
 class UserRegisterAPIView(generics.GenericAPIView):
@@ -116,7 +113,6 @@ class UserRegisterAPIView(generics.GenericAPIView):
         print(user)
         print(user.password)
         token, created = Token.objects.get_or_create(user=user)
-
 
         return Response({
             # "user": UserInfoSerializer(user, context=self.get_serializer_context()).data,

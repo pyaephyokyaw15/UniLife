@@ -7,7 +7,7 @@ from django.conf import settings
 # Create your models here.
 class Post(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts")
-    image = models.ImageField(null=True, blank=True)
+    image = models.ImageField()
     title = models.CharField(max_length=200)
     content = models.TextField()
     created_date = models.DateTimeField(default=timezone.now, editable=False)
