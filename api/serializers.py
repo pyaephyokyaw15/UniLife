@@ -17,13 +17,13 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         print(validated_data)
-        image = instance.image
-        print("image", image)
+        profile_picture = instance.profile_picture
+        print("profile_picture", profile_picture)
         user = super().update(instance, validated_data)
-        if not user.image:
+        if not user.profile_picture:
             # frontend send null if the image is not changed.
             # If image is null, set image the current image.
-            user.image = image
+            user.profile_picture = profile_picture
             user.save()
         return user
 
