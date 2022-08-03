@@ -10,6 +10,7 @@ from accounts.models import User
 
 class UserInfoSerializer(serializers.ModelSerializer):
     profile_picture = Base64ImageField(allow_null=True)
+
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'university', 'profile_picture']
@@ -246,3 +247,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+class UserProfileSerializer(UserInfoSerializer):
+    posts = PostDetailSerializer(many=True, read_only=True)
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'university', 'profile_picture', 'posts']
+        read_only_fields = ['id', 'username', 'posts']

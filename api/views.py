@@ -1,7 +1,7 @@
 import rest_framework.renderers
 from rest_framework import authentication, generics, permissions, viewsets, mixins
 from rest_framework.renderers import JSONRenderer
-from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer, PostDetailSerializer, CommentSerializer
+from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer, PostDetailSerializer, CommentSerializer, UserProfileSerializer
 from post.models import Post, Comment
 # from django.contrib.auth.models import User
 # from rest_framework.response import Response
@@ -62,7 +62,7 @@ class UserViewSet(viewsets.GenericViewSet,
                   mixins.ListModelMixin,
                   mixins.UpdateModelMixin):
     """Manage recipes in the database"""
-    serializer_class = UserInfoSerializer
+    serializer_class = UserProfileSerializer
     queryset = User.objects.all()
     permission_classes = [IsUserOrReadOnly]
 
