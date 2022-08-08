@@ -88,7 +88,7 @@ class CreateTokenView(ObtainAuthToken):
         # not found in documentation(as far as I searched)
         # Checking User and Token Table. It is one-to-one relationship.
         request.user.auth_token.delete()  # simply delete the token to force a login
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_200_OK)
 
     def get_permissions(self):
         # dynamically change the permission classes according to the request METHOD.
