@@ -90,10 +90,11 @@ class PostSerializer(serializers.ModelSerializer):
     owner = UserInfoSerializer(read_only=True)
     image = Base64ImageField(allow_null=True)
     url = serializers.HyperlinkedIdentityField(view_name='api:post-detail', read_only=True)
+    image_removed = serializers.BooleanField(default=False, write_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'url']
+        fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'url', 'image_removed']
         extra_kwargs = {
             "title": {"error_messages": {"required": "Title is required"}},
             "content": {"error_messages": {"required": "Content is required"}},
@@ -110,13 +111,22 @@ class PostSerializer(serializers.ModelSerializer):
         return obj
 
     def update(self, instance, validated_data):
-
         print(validated_data)
-        image = instance.image
+        image_removed = validated_data['image_removed']
+
+        # get the current(before update) image
         print("image", instance.image)
+        image = instance.image
+
+        # update image with the validated data(front-end sent data)
         post = super().update(instance, validated_data)
-        if not post.image:
-            # frontend send null if the image is not changed.
+
+        if image_removed:
+            # front-end set image_removed field True if the image is removed.
+            post.image = None
+
+        elif not post.image:
+            # front-end send null if the image is not changed.
             # If image is null, set image the current image.
             post.image = image
             post.save()
@@ -152,9 +162,10 @@ class PostSerializer(serializers.ModelSerializer):
 class PostDetailSerializer(PostSerializer):
     comments = CommentSerializer(many=True, read_only=True)
 
+
     class Meta:
         model = Post
-        fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'comments']
+        fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'comments', 'image_removed']
 
     def to_representation(self, instance):
         request = self.context.get('request')
