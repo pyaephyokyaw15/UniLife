@@ -74,6 +74,12 @@ class UserViewSet(viewsets.GenericViewSet,
     queryset = User.objects.all()
     permission_classes = [IsUserOrReadOnly]
 
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'update':
+            return UserInfoSerializer
+        return self.serializer_class
+
 
 class CreateTokenView(ObtainAuthToken):
     # POST api/v2/auth/token/
