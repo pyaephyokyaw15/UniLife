@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from accounts.models import User
 from django.urls import reverse
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 
 # Create your views here.
@@ -140,7 +141,7 @@ class PostSaveActionAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
-        post = Post.objects.get(pk=pk)
+        post = get_object_or_404(Post, pk=pk)
 
         if post in request.user.saved_posts.all():
             request.user.saved_posts.remove(post)
@@ -155,7 +156,7 @@ class PostLikeActionAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
-        post = Post.objects.get(pk=pk)
+        post = get_object_or_404(Post, pk=pk)
 
         if post in request.user.liked_posts.all():
             request.user.liked_posts.remove(post)
@@ -171,7 +172,7 @@ class FollowAPIView(APIView):
     def post(self, request, *args, **kwargs):
         current_user = request.user
         pk = kwargs['pk']
-        profile_user = User.objects.get(pk=pk)
+        profile_user = get_object_or_404(User, pk=pk)
 
         if current_user in profile_user.followers.all():
             profile_user.followers.remove(current_user)
