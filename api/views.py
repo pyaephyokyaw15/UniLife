@@ -32,9 +32,11 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         saved = "saved" in self.request.query_params
+        following = "following" in self.request.query_params
         username = self.request.query_params.get("username")
         q = self.request.query_params.get("q")
         queryset = self.queryset
+
         if saved:
             if self.request.user.is_authenticated:
                 queryset = queryset.filter(saved_by=self.request.user)
@@ -43,6 +45,12 @@ class PostViewSet(viewsets.ModelViewSet):
 
         if username:
             queryset = queryset.filter(owner__username=username)
+
+        if following:
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(owner__in=self.request.user.following.all())
+            else:
+                queryset = []
 
         if q:
             queryset = queryset.filter(Q(title__icontains=q) | Q(owner__username__icontains=q))
@@ -149,5 +157,23 @@ class PostLikeActionAPIView(APIView):
         else:
             request.user.liked_posts.add(post)
             return Response({"result": None, "status-code": status.HTTP_200_OK, "message": "liked"}, status=status.HTTP_200_OK)
+
+
+class FollowAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        current_user = request.user
+        pk = kwargs['pk']
+        profile_user = User.objects.get(pk=pk)
+
+        if current_user in profile_user.followers.all():
+            profile_user.followers.remove(current_user)
+            return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unfollowed"},
+                            status=status.HTTP_200_OK)
+        else:
+            profile_user.followers.add(current_user)
+            return Response({"result": None, "status-code": status.HTTP_200_OK, "message": "followed"},
+                            status=status.HTTP_200_OK)
 
 

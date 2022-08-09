@@ -17,6 +17,7 @@ urlpatterns = [
     path('auth/register/', views.UserRegisterAPIView.as_view(), name='register'),
     path('posts/<int:pk>/save/', views.PostSaveActionAPIView.as_view(), name='post-save'),
     path('posts/<int:pk>/like/', views.PostLikeActionAPIView.as_view(), name='post-like'),
+    path('accounts/<int:pk>/follow/', views.FollowAPIView.as_view(), name='user-follow'),
 ]
 
 # print(urlpatterns)

@@ -261,7 +261,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(UserInfoSerializer):
     posts = PostDetailSerializer(many=True, read_only=True)
+    # following = serializers.PrimaryKeyRelatedField(queryset=User.following, many=True)
+    following = UserInfoSerializer(many=True)
+    followers = UserInfoSerializer(many=True)
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'university', 'profile_picture', 'posts']
+        fields = ['id', 'username', 'first_name', 'last_name', 'university', 'profile_picture', 'posts', 'followers', 'following']
         read_only_fields = ['id', 'username', 'posts']
