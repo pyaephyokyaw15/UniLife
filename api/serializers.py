@@ -18,12 +18,17 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         print(validated_data)
+
+        # get the current(before update) profile_picture
         profile_picture = instance.profile_picture
         print("profile_picture", profile_picture)
+
+        # update user with the validated data(front-end sent data)
         user = super().update(instance, validated_data)
+
         if not user.profile_picture:
             # frontend send null if the image is not changed.
-            # If image is null, set image the current image.
+            # If image is null, set image the current(before update) image.
             user.profile_picture = profile_picture
             user.save()
         return user
@@ -107,6 +112,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         validated_data['owner'] = request.user  # assign the owner to the current user
         print(validated_data)
+        del validated_data['image_removed']
         obj = super().create(validated_data)
         return obj
 
@@ -118,7 +124,8 @@ class PostSerializer(serializers.ModelSerializer):
         print("image", instance.image)
         image = instance.image
 
-        # update image with the validated data(front-end sent data)
+        # update post with the validated data(front-end sent data)
+        del validated_data['image_removed']
         post = super().update(instance, validated_data)
 
         if image_removed:

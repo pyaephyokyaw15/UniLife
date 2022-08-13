@@ -138,6 +138,7 @@ class UserRegisterAPIView(generics.GenericAPIView):
 
 class PostSaveActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [rest_framework.renderers.JSONRenderer]
 
     def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
@@ -153,6 +154,9 @@ class PostSaveActionAPIView(APIView):
 
 class PostLikeActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [rest_framework.renderers.JSONRenderer]
+
+
 
     def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
@@ -168,6 +172,7 @@ class PostLikeActionAPIView(APIView):
 
 class FollowAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [rest_framework.renderers.JSONRenderer]
 
     def post(self, request, *args, **kwargs):
         current_user = request.user
