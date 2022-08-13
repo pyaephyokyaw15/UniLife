@@ -56,15 +56,21 @@ class CustomApiRenderer(renderers.JSONRenderer):
                         result = data
 
         if status_code == 204:
+            print(result)
+            result = None
             message = 'Successfully deleted'
 
         elif status_code == 200:
             if method == 'PUT' or method == 'PATCH':
+                print(result)
+                result = None
                 message = 'Successfully Updated'
             else:
                 message = 'OK'
 
         elif status_code == 201:
+            print(result)
+            result = None
             message = 'Successfully Created'
 
         response = json.dumps({'result': result, 'status_code': status_code, 'message': message})
