@@ -58,12 +58,24 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_200_OK)
+
+
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Manage recipes in the database"""
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
     permission_classes = [IsOwnerOrReadOnly]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.GenericViewSet,
@@ -82,7 +94,7 @@ class UserViewSet(viewsets.GenericViewSet,
         return self.serializer_class
 
 
-class CreateTokenView(ObtainAuthToken):
+class TokenView(ObtainAuthToken):
     # POST api/v2/auth/token/
     renderer_classes = [CustomApiRenderer]
     serializer_class = CustomAuthTokenSerializer
