@@ -72,6 +72,16 @@ class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     permission_classes = [IsOwnerOrReadOnly]
 
+    def get_queryset(self):
+        post_id = self.request.query_params.get("post_id")
+        queryset = self.queryset
+
+        if post_id:
+            queryset = queryset.filter(post=post_id)
+
+        return queryset
+
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
