@@ -1,26 +1,22 @@
 import rest_framework.renderers
-from rest_framework import authentication, generics, permissions, viewsets, mixins
-from rest_framework.renderers import JSONRenderer
-from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer, PostDetailSerializer, CommentSerializer, UserProfileSerializer
+from rest_framework import generics, permissions, viewsets, mixins
+from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, \
+    UserInfoSerializer, PostDetailSerializer, CommentSerializer, UserProfileSerializer
 from post.models import Post, Comment
-# from django.contrib.auth.models import User
-# from rest_framework.response import Response
 from .permission import IsOwnerOrReadOnly, IsUserOrReadOnly
 from .renderers import CustomApiRenderer
-from rest_framework.authtoken.views import ObtainAuthToken  # obtain_auth_token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from accounts.models import User
-from django.urls import reverse
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 
 # Create your views here.
 class PostViewSet(viewsets.ModelViewSet):
-    """Manage recipes in the database"""
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     permission_classes = [IsOwnerOrReadOnly]
@@ -32,11 +28,14 @@ class PostViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
     def get_queryset(self):
+        """Filter the default query_set according to the request parameter"""
+        queryset = self.queryset
+
+        # get key from url query parameter
         saved = "saved" in self.request.query_params
         following = "following" in self.request.query_params
         username = self.request.query_params.get("username")
         q = self.request.query_params.get("q")
-        queryset = self.queryset
 
         if saved:
             if self.request.user.is_authenticated:
@@ -54,35 +53,34 @@ class PostViewSet(viewsets.ModelViewSet):
                 queryset = []
 
         if q:
-            queryset = queryset.filter(Q(title__icontains=q) | Q(owner__username__icontains=q))
+            queryset = queryset.filter(Q(title__icontains=q) | Q(owner__username__icontains=q) | Q(content__icontains=q))
 
         return queryset
 
     def destroy(self, request, *args, **kwargs):
+        # override the delete method to get the required status_code(200)
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_200_OK)
 
 
-
-
 class CommentViewSet(viewsets.ModelViewSet):
-    """Manage recipes in the database"""
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
     permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        post_id = self.request.query_params.get("post_id")
+        """Filter the default query_set according to the request parameter"""
         queryset = self.queryset
 
-        if post_id:
+        # get key from url query parameter
+        post_id = self.request.query_params.get("post_id")
+        if post_id:  # get a certain post's comments
             queryset = queryset.filter(post=post_id)
-
         return queryset
 
-
     def destroy(self, request, *args, **kwargs):
+        # override the delete method to get the required status_code(200)
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_200_OK)
@@ -92,7 +90,6 @@ class UserViewSet(viewsets.GenericViewSet,
                   mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
                   mixins.UpdateModelMixin):
-    """Manage recipes in the database"""
     serializer_class = UserProfileSerializer
     queryset = User.objects.all()
     permission_classes = [IsUserOrReadOnly]
@@ -116,7 +113,6 @@ class TokenView(ObtainAuthToken):
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
         return Response({
-            # "user": UserInfoSerializer(user, context=self.get_serializer_context()).data,
             "user": UserInfoSerializer(user).data,
             "token": token.key
         })
@@ -130,7 +126,7 @@ class TokenView(ObtainAuthToken):
     def get_permissions(self):
         # dynamically change the permission classes according to the request METHOD.
 
-        # To delete token , token must be provided in DELETE request.
+        # To delete token , the user must be authenticated(must have token).
         if self.request.method == 'DELETE':
             self.permission_classes = [permissions.IsAuthenticated]
 
@@ -138,7 +134,6 @@ class TokenView(ObtainAuthToken):
 
 
 class UserRegisterAPIView(generics.GenericAPIView):
-    # POST api/auth/register
     serializer_class = UserRegisterSerializer
 
     def post(self, request, *args, **kwargs):
@@ -149,10 +144,11 @@ class UserRegisterAPIView(generics.GenericAPIView):
         user = serializer.save()
         print(user)
         print(user.password)
+
+        # create token and return this token
         token, created = Token.objects.get_or_create(user=user)
 
         return Response({
-            # "user": UserInfoSerializer(user, context=self.get_serializer_context()).data,
             "user": UserInfoSerializer(user).data,
             "token": token.key
         })
@@ -166,6 +162,7 @@ class PostSaveActionAPIView(APIView):
         pk = kwargs['pk']
         post = get_object_or_404(Post, pk=pk)
 
+        # toggle save status
         if post in request.user.saved_posts.all():
             request.user.saved_posts.remove(post)
             return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unsaved"}, status=status.HTTP_200_OK)
@@ -178,12 +175,11 @@ class PostLikeActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     renderer_classes = [rest_framework.renderers.JSONRenderer]
 
-
-
     def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
         post = get_object_or_404(Post, pk=pk)
 
+        # toggle like status
         if post in request.user.liked_posts.all():
             request.user.liked_posts.remove(post)
             return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unliked"}, status=status.HTTP_200_OK)
@@ -197,10 +193,11 @@ class FollowAPIView(APIView):
     renderer_classes = [rest_framework.renderers.JSONRenderer]
 
     def post(self, request, *args, **kwargs):
-        current_user = request.user
+        current_user = request.user  # login-user
         pk = kwargs['pk']
-        profile_user = get_object_or_404(User, pk=pk)
+        profile_user = get_object_or_404(User, pk=pk)  # currently viewing profile-user
 
+        # toggle follow status
         if current_user in profile_user.followers.all():
             profile_user.followers.remove(current_user)
             return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unfollowed"},

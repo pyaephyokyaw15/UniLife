@@ -41,11 +41,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'post.apps.PostConfig',
-    'api.apps.ApiConfig',
+
+    # rest_api
     'rest_framework',
     'rest_framework.authtoken',
-    'accounts.apps.AccountsConfig'
+
+    # Register your apps here
+    'accounts.apps.AccountsConfig',
+    'post.apps.PostConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -78,9 +82,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'unilife.wsgi.application'
 
+AUTH_USER_MODEL = "accounts.User"
+
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
+
+# For those who clone and test this repo, I left sqlite as the database in this repo for quick start.
+# You can define any database you like.
+# I use PostgreSQL in production.
 
 DATABASES = {
     'default': {
@@ -148,4 +158,3 @@ MEDIA_URL = 'media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = "accounts.User"

@@ -4,9 +4,11 @@ import re
 
 
 class CustomApiRenderer(renderers.JSONRenderer):
+    """
+    override the render method to meet the format asked by frontend(mobile) developer.
+    """
     charset = 'utf-8'
 
-    # override the render method to meet the format asked by frontend(mobile) developer.
     def render(self, data, accepted_media_type=None, renderer_context=None):
         # print('Data', data)
         # print('Context', renderer_context['request'])

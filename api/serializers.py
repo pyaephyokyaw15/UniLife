@@ -14,9 +14,9 @@ class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'university', 'profile_picture']
-        read_only_fields = ['id', 'username']
+        read_only_fields = ['id', 'username']  # show only on GET request
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data):  # override update method
         print(validated_data)
 
         # get the current(before update) profile_picture
@@ -33,7 +33,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
-    def to_representation(self, instance):
+    def to_representation(self, instance):  # override the serializer response
         representation = super().to_representation(instance)
 
         # this serializer is also used in data return.
@@ -41,7 +41,8 @@ class UserInfoSerializer(serializers.ModelSerializer):
         try:
             request = self.context.get('request')
 
-            # check the current profile it the current's user profile or not
+            # check the current viewing profile is the current user's profile or not
+            # 'self_profile' attribute is added to help the frontend developer know whether profile can be edited or not
             if request.method == "GET":
                 user = request.user
                 if instance == user:
@@ -60,7 +61,8 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'comment', 'owner', 'created_date', 'post', 'url']
-        read_only_fields = ['created_date']
+
+        # override the error message
         extra_kwargs = {
             "comment": {"error_messages": {"required": "comment is required"}},
             "post": {"error_messages": {"required": "post is required"}},
@@ -75,7 +77,7 @@ class CommentSerializer(serializers.ModelSerializer):
         obj = super().create(validated_data)
         return obj
 
-    def to_representation(self, instance):
+    def to_representation(self, instance):  # override the serializer response
         request = self.context.get('request')
         user = request.user
         representation = super().to_representation(instance)
@@ -85,7 +87,6 @@ class CommentSerializer(serializers.ModelSerializer):
         # print(user)
         if not user.is_anonymous:
             # print(instance)
-
             if instance in user.comments.all():
                 representation['is_owner'] = True
         return representation
@@ -100,11 +101,11 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'url', 'image_removed']
+        # override the error message
         extra_kwargs = {
             "title": {"error_messages": {"required": "Title is required"}},
             "content": {"error_messages": {"required": "Content is required"}},
         }
-
 
     def create(self, validated_data):  # override the create method
         print(validated_data)
@@ -116,7 +117,7 @@ class PostSerializer(serializers.ModelSerializer):
         obj = super().create(validated_data)
         return obj
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data):  # override the update method
         print(validated_data)
         image_removed = validated_data['image_removed']
 
@@ -140,22 +141,21 @@ class PostSerializer(serializers.ModelSerializer):
 
         return post
 
-
-    def to_representation(self, instance):
+    def to_representation(self, instance):  # override the serializer response
         request = self.context.get('request')
         user = request.user
         representation = super().to_representation(instance)
         representation['is_liked'] = False
         representation['is_saved'] = False
-        representation['is_owner'] = False
-        print(user)
+        representation['is_owner'] = False  # 'help the frontend developer know whether post can be edited or not
+        # print(user)
+
         if not user.is_anonymous:
             print(instance)
 
             # check liked or not for the current user
             if instance in user.liked_posts.all():
                 representation['is_liked'] = True
-
 
             if instance in user.saved_posts.all():
                 representation['is_saved'] = True
@@ -169,34 +169,10 @@ class PostSerializer(serializers.ModelSerializer):
 class PostDetailSerializer(PostSerializer):
     comments = CommentSerializer(many=True, read_only=True)
 
-
     class Meta:
         model = Post
-        fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts', 'comment_counts', 'comments', 'image_removed']
-
-    def to_representation(self, instance):
-        request = self.context.get('request')
-        user = request.user
-        representation = super().to_representation(instance)
-        representation['is_liked'] = False
-        representation['is_saved'] = False
-        representation['is_owner'] = False
-        print(user)
-        if not user.is_anonymous:
-            print(instance)
-
-            # check liked or not for the current user
-            if instance in user.liked_posts.all():
-                representation['is_liked'] = True
-
-
-            if instance in user.saved_posts.all():
-                representation['is_saved'] = True
-
-            if instance in user.posts.all():
-                representation['is_owner'] = True
-
-        return representation
+        fields = ['id', 'owner', 'title', 'content', 'created_date', 'image', 'like_counts',
+                  'comment_counts', 'comments', 'image_removed']
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):
@@ -228,13 +204,13 @@ class CustomAuthTokenSerializer(serializers.Serializer):
             # backend.)
             if not user:
                 msg = _('Invalid username or password.')
-                raise serializers.ValidationError(msg, code='ownerization')
+                raise serializers.ValidationError(msg, code='authorization')
         else:
             msg = _('Must include "username" and "password".')
             raise serializers.ValidationError(msg, code='authorization')
 
         # print('Attrs', attrs)
-        attrs['user'] = user
+        attrs['user'] = user  # add user to serializer response
         # print(attrs)
         return attrs
 
@@ -245,6 +221,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'password', 'first_name', 'last_name', 'university', 'profile_picture']
+        # override error message
         extra_kwargs = {
             "username": {"error_messages": {"required": "username is required"}},
             "password": {"error_messages": {"required": "password is required"}},
@@ -262,16 +239,18 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             profile_picture=validated_data['profile_picture'],
             university=validated_data['university']
         )
-        user.set_password(validated_data['password'])
+        user.set_password(validated_data['password'])  # hash password
         user.save()
         return user
+
 
 class UserProfileSerializer(UserInfoSerializer):
     posts = PostDetailSerializer(many=True, read_only=True)
     # following = serializers.PrimaryKeyRelatedField(queryset=User.following, many=True)
     following = UserInfoSerializer(many=True)
     followers = UserInfoSerializer(many=True)
+
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'university', 'profile_picture', 'posts', 'followers', 'following']
-        read_only_fields = ['id', 'username', 'posts']
+        read_only_fields = ['id', 'username', 'posts']  # show only on GET request

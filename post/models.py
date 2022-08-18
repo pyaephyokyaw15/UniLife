@@ -10,7 +10,7 @@ class Post(models.Model):
     image = models.ImageField()
     title = models.CharField(max_length=200)
     content = models.TextField()
-    created_date = models.DateTimeField(default=timezone.now, editable=False)
+    created_date = models.DateTimeField(auto_now_add=True)
     saved_by = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="saved_posts", blank=True)
     liked_by = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_posts", blank=True)
 
@@ -30,7 +30,7 @@ class Comment(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="comments")
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     comment = models.TextField()
-    created_date = models.DateTimeField(default=timezone.now)
+    created_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_date"]

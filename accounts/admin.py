@@ -3,7 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from .models import User
 
 
-class CustomAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin):
+    # Add 'profile_picture and followers' fields on users when accessing via Django Admin dashboard
     fieldsets = UserAdmin.fieldsets + (
         ('Extra Fields', {
             'classes': ('wide',),
@@ -11,6 +12,7 @@ class CustomAdmin(UserAdmin):
          ),
     )
 
+
 # Register your models here.
-admin.site.register(User, CustomAdmin)
+admin.site.register(User, CustomUserAdmin)
 

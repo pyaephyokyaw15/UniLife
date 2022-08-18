@@ -24,4 +24,4 @@ urlpatterns = [
     path('api/v2/', include('api.urls')),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # to get media via url
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)   # Get media via url
