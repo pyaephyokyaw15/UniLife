@@ -46,9 +46,18 @@ class UserInfoSerializer(serializers.ModelSerializer):
             if request.method == "GET":
                 user = request.user
                 if instance == user:
-                    representation['self_profile'] = True
+                    representation['is_self_profile'] = True
                 else:
-                    representation['self_profile'] = False
+                    representation['is_self_profile'] = False
+
+                if user in request.user.following.all():
+                    representation['is_following'] = True
+
+                else:
+                    representation['is_following'] = False
+
+
+
         except:
             None
         return representation
