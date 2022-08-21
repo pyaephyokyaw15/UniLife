@@ -30,14 +30,18 @@ class PostViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter the default query_set according to the request parameter"""
         queryset = self.queryset
-
+        print(self.request.query_params)
         # get key from url query parameter
-        saved = "saved" in self.request.query_params
-        following = "following" in self.request.query_params
+        saved = self.request.query_params.get("is_saved")
+        print(saved)
+        following = self.request.query_params.get("is_following")
+        print(following)
         username = self.request.query_params.get("username")
+        print(username)
         q = self.request.query_params.get("q")
 
-        if saved:
+        if saved == "true":
+            print("Saved posts")
             if self.request.user.is_authenticated:
                 queryset = queryset.filter(saved_by=self.request.user)
             else:
@@ -46,7 +50,7 @@ class PostViewSet(viewsets.ModelViewSet):
         if username:
             queryset = queryset.filter(owner__username=username)
 
-        if following:
+        if following == "true":
             if self.request.user.is_authenticated:
                 queryset = queryset.filter(owner__in=self.request.user.following.all())
             else:
