@@ -50,7 +50,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
                 else:
                     representation['is_self_profile'] = False
 
-                if user in request.user.following.all():
+                if instance in request.user.following.all():
                     representation['is_following'] = True
 
                 else:
