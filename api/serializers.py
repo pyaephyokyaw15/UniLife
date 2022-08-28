@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from post.models import Post, Comment
 from drf_extra_fields.fields import Base64ImageField
+from .fields import CustomBase64ImageFiled
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
 # from django.contrib.auth.models import User
@@ -9,7 +10,7 @@ from accounts.models import User
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
-    profile_picture = Base64ImageField(allow_null=True)
+    profile_picture = CustomBase64ImageFiled(allow_null=True)
 
     class Meta:
         model = User
@@ -63,6 +64,18 @@ class UserInfoSerializer(serializers.ModelSerializer):
         return representation
 
 
+class CommentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'post', 'comment']
+
+
+class CommentUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'comment']
+
+
 class CommentSerializer(serializers.ModelSerializer):
     owner = UserInfoSerializer(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='api:comment-detail', read_only=True)
@@ -100,6 +113,12 @@ class CommentSerializer(serializers.ModelSerializer):
                 representation['is_owner'] = True
         return representation
 
+class PostCreateSerializer(serializers.ModelSerializer):
+    image = CustomBase64ImageFiled(required=True, allow_null=True)
+
+    class Meta:
+        model = Post
+        fields = ['title', 'content', 'image']
 
 class PostSerializer(serializers.ModelSerializer):
     owner = UserInfoSerializer(read_only=True)
@@ -225,7 +244,7 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
-    profile_picture = Base64ImageField(allow_null=True)
+    profile_picture = CustomBase64ImageFiled(allow_null=True)
 
     class Meta:
         model = User

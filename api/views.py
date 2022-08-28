@@ -1,7 +1,10 @@
 import rest_framework.renderers
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, permissions, viewsets, mixins
 from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, \
-    UserInfoSerializer, PostDetailSerializer, CommentSerializer, UserProfileSerializer
+    UserInfoSerializer, PostDetailSerializer, CommentSerializer, UserProfileSerializer,\
+    PostCreateSerializer, CommentCreateSerializer, CommentUpdateSerializer
 from post.models import Post, Comment
 from .permission import IsOwnerOrReadOnly, IsUserOrReadOnly
 from .renderers import CustomApiRenderer
@@ -13,13 +16,22 @@ from rest_framework.response import Response
 from accounts.models import User
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from rest_framework.parsers import MultiPartParser,JSONParser, FileUploadParser
 
-
+test_param = openapi.Parameter('test', openapi.IN_QUERY, description="test manual param", type=openapi.TYPE_BOOLEAN)
+@method_decorator(name='list', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='create', decorator=swagger_auto_schema(responses={201: ''}, request_body=PostCreateSerializer))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='update', decorator=swagger_auto_schema(responses={200: ''}, request_body=PostCreateSerializer))
+@method_decorator(name='partial_update', decorator=swagger_auto_schema(auto_schema=None))
+@method_decorator(name='destroy', decorator=swagger_auto_schema(responses={200: ''}))
 # Create your views here.
 class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     permission_classes = [IsOwnerOrReadOnly]
+
 
     def get_serializer_class(self):
         """Return appropriate serializer class"""
@@ -68,6 +80,12 @@ class PostViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_200_OK)
 
 
+@method_decorator(name='list', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='create', decorator=swagger_auto_schema(responses={201: ''}, request_body=CommentCreateSerializer))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='update', decorator=swagger_auto_schema(responses={200: ''}, request_body=CommentCreateSerializer))
+@method_decorator(name='partial_update', decorator=swagger_auto_schema(auto_schema=None))
+@method_decorator(name='destroy', decorator=swagger_auto_schema(responses={200: ''}))
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
@@ -89,7 +107,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_200_OK)
 
-
+@method_decorator(name='list', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='update', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='partial_update', decorator=swagger_auto_schema(auto_schema=None))
 class UserViewSet(viewsets.GenericViewSet,
                   mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
@@ -111,6 +132,7 @@ class TokenView(ObtainAuthToken):
     serializer_class = CustomAuthTokenSerializer
 
     # generate token
+    @swagger_auto_schema(responses={200: ''})
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -121,6 +143,7 @@ class TokenView(ObtainAuthToken):
             "token": token.key
         })
 
+    @swagger_auto_schema(responses={200: ''})
     def delete(self, request):
         # not found in documentation(as far as I searched)
         # Checking User and Token Table. It is one-to-one relationship.
@@ -140,6 +163,7 @@ class TokenView(ObtainAuthToken):
 class UserRegisterAPIView(generics.GenericAPIView):
     serializer_class = UserRegisterSerializer
 
+    @swagger_auto_schema(responses={200: ''})
     def post(self, request, *args, **kwargs):
         print('Request Data', request.data)
         serializer = self.get_serializer(data=request.data)
@@ -162,6 +186,7 @@ class PostSaveActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     renderer_classes = [rest_framework.renderers.JSONRenderer]
 
+    @swagger_auto_schema(responses={200: ''})
     def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
         post = get_object_or_404(Post, pk=pk)
@@ -179,6 +204,7 @@ class PostLikeActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     renderer_classes = [rest_framework.renderers.JSONRenderer]
 
+    @swagger_auto_schema(responses={200: ''})
     def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
         post = get_object_or_404(Post, pk=pk)
@@ -196,6 +222,7 @@ class FollowAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     renderer_classes = [rest_framework.renderers.JSONRenderer]
 
+    @swagger_auto_schema(responses={200: ''})
     def post(self, request, *args, **kwargs):
         current_user = request.user  # login-user
         pk = kwargs['pk']

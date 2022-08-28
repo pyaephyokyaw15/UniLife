@@ -50,6 +50,10 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'post.apps.PostConfig',
     'api.apps.ApiConfig',
+
+    # swagger
+    'drf_yasg',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -132,7 +136,15 @@ REST_FRAMEWORK = {
     ]
 }
 
-
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+        }
+    },
+}
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
