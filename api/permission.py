@@ -1,32 +1,40 @@
 from rest_framework import permissions
 
 
-# class IsOwnerOrReadOnly(permissions.BasePermission):
-#     """
-#     Object-level permission to only allow owners of an object to edit it.
-#     Assumes the model instance has an `owner` attribute.
-#     """
-#
-#     def has_object_permission(self, request, view, obj):
-#         # Read permissions are allowed to any request,
-#         # so we'll always allow GET, HEAD or OPTIONS requests.
-#         if request.method in permissions.SAFE_METHODS:
-#             return True
-#
-#         # Instance must have an attribute named `owner`.
-#         return obj.owner == request.user
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        """
+        Model-level permission
+        Return `True` if permission is granted, `False` otherwise.
+        """
+        if request.user.is_authenticated or (request.method in permissions.SAFE_METHODS):
+            # SAFE_METHODS(e.g.GET) is granted for both authenticated and non-authenticated users.
+            # Other Methods are granted only for authenticated users.
+            return True
+        return False
 
-class UserPostPermissions(permissions.BasePermission):
-    # Owners of the object or admins can do anything with the object.
-    # Others can do nothing except retrieve.
+    def has_object_permission(self, request, view, obj):
+        """
+           Object-level permission.
+           Return `True` if permission is granted, `False` otherwise.
+        """
+        # SAFE_METHODS(e.g.GET) is granted for all users.
+        # Other Methods are granted only for owner.
+        if request.method in permissions.SAFE_METHODS:
+            return True
 
-    def has_object_permission(self, request, view, obj):  # override the method
-        return obj.author == request.user
-
-class UserCommentPermissions(permissions.BasePermission):
-    # Owners of the object or admins can do anything with the object.
-    # Others can do nothing except retrieve.
-
-    def has_object_permission(self, request, view, obj):  # override the method
+        # Instance must have an attribute named `owner`.
         return obj.owner == request.user
 
+
+class IsUserOrReadOnly(permissions.BasePermission):
+    """
+    Object-level permission to the user  to edit only his profile.
+    """
+    def has_object_permission(self, request, view, obj):
+        # SAFE_METHODS(e.g.GET) is granted for all users.
+        # Other Methods are granted only for user itself.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return obj == request.user

@@ -1,218 +1,240 @@
-from rest_framework import authentication, generics, permissions
-# from rest_framework.renderers import JSONRenderer
-from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, UserInfoSerializer, CommentSerializer
+import rest_framework.renderers
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import generics, permissions, viewsets, mixins
+from .serializers import PostSerializer, CustomAuthTokenSerializer, UserRegisterSerializer, \
+    UserInfoSerializer, PostDetailSerializer, CommentSerializer, UserProfileSerializer,\
+    PostCreateSerializer, CommentCreateSerializer, CommentUpdateSerializer
 from post.models import Post, Comment
-# from django.contrib.auth.models import User
-from rest_framework.response import Response
-from .permission import UserPostPermissions, UserCommentPermissions
+from .permission import IsOwnerOrReadOnly, IsUserOrReadOnly
 from .renderers import CustomApiRenderer
-from rest_framework.authtoken.views import ObtainAuthToken  # obtain_auth_token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
+from accounts.models import User
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from rest_framework.parsers import MultiPartParser,JSONParser, FileUploadParser
 
-
+test_param = openapi.Parameter('test', openapi.IN_QUERY, description="test manual param", type=openapi.TYPE_BOOLEAN)
+@method_decorator(name='list', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='create', decorator=swagger_auto_schema(responses={201: ''}, request_body=PostCreateSerializer))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='update', decorator=swagger_auto_schema(responses={200: ''}, request_body=PostCreateSerializer))
+@method_decorator(name='partial_update', decorator=swagger_auto_schema(auto_schema=None))
+@method_decorator(name='destroy', decorator=swagger_auto_schema(responses={200: ''}))
 # Create your views here.
-class PostListAPIView(generics.ListAPIView):
-    # GET /api/post/list/
+class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
+    permission_classes = [IsOwnerOrReadOnly]
 
 
-    # def list(self, request, *args, **kwargs):
-    #     # you can override this method to get the required api response instead of custom renderer.
-    #     response = super().list(request, *args, **kwargs)
-    #     custom_response = dict()
-    #     custom_response["result"] = {"data": response.data}
-    #     custom_response["status_code"] = 200
-    #     custom_response["message"] = 'OK'
-    #     return Response(custom_response)
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'retrieve':
+            return PostDetailSerializer
+        return self.serializer_class
+
+    def get_queryset(self):
+        """Filter the default query_set according to the request parameter"""
+        queryset = self.queryset
+        print(self.request.query_params)
+        # get key from url query parameter
+        saved = self.request.query_params.get("is_saved")
+        print(saved)
+        following = self.request.query_params.get("is_following")
+        print(following)
+        username = self.request.query_params.get("username")
+        print(username)
+        q = self.request.query_params.get("q")
+
+        if saved == "true":
+            print("Saved posts")
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(saved_by=self.request.user)
+            else:
+                queryset = []
+
+        if username:
+            queryset = queryset.filter(owner__username=username)
+
+        if following == "true":
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(owner__in=self.request.user.following.all())
+            else:
+                queryset = []
+
+        if q:
+            queryset = queryset.filter(Q(title__icontains=q) | Q(owner__username__icontains=q) | Q(content__icontains=q))
+
+        return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        # override the delete method to get the required status_code(200)
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_200_OK)
 
 
-class UserPostListAPIView(generics.ListAPIView):
-    # GET /api/user/<int:pk>/posts/
-    serializer_class = PostSerializer
-    queryset = Post.objects.all()
+@method_decorator(name='list', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='create', decorator=swagger_auto_schema(responses={201: ''}, request_body=CommentCreateSerializer))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='update', decorator=swagger_auto_schema(responses={200: ''}, request_body=CommentCreateSerializer))
+@method_decorator(name='partial_update', decorator=swagger_auto_schema(auto_schema=None))
+@method_decorator(name='destroy', decorator=swagger_auto_schema(responses={200: ''}))
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
+    permission_classes = [IsOwnerOrReadOnly]
 
-    def get_queryset(self):  # override the method
-        user = self.kwargs.get('pk')
-        # owner = User.objects.get(id=)
-        qs = super().get_queryset()
-        return qs.filter(author=user)
+    def get_queryset(self):
+        """Filter the default query_set according to the request parameter"""
+        queryset = self.queryset
 
+        # get key from url query parameter
+        post_id = self.request.query_params.get("post_id")
+        if post_id:  # get a certain post's comments
+            queryset = queryset.filter(post=post_id)
+        return queryset
 
-class SavedPostListAPIView(generics.ListAPIView):
-    # GET /api/user/<int:pk>/posts/
-    serializer_class = PostSerializer
-    queryset = Post.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    def destroy(self, request, *args, **kwargs):
+        # override the delete method to get the required status_code(200)
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_200_OK)
 
-    def get_queryset(self):  # override the method
+@method_decorator(name='list', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='update', decorator=swagger_auto_schema(responses={200: ''}))
+@method_decorator(name='partial_update', decorator=swagger_auto_schema(auto_schema=None))
+class UserViewSet(viewsets.GenericViewSet,
+                  mixins.RetrieveModelMixin,
+                  mixins.ListModelMixin,
+                  mixins.UpdateModelMixin):
+    serializer_class = UserProfileSerializer
+    queryset = User.objects.all()
+    permission_classes = [IsUserOrReadOnly]
 
-        qs = super().get_queryset()
-        return qs.filter(saved_by=self.request.user)
-
-
-class PostDetailAPIView(generics.RetrieveAPIView):
-    # GET /api/post/<int:pk>
-    serializer_class = PostSerializer
-    queryset = Post.objects.all()
-
-    # def get(self, request, *args, **kwargs):
-    #     # you can override this method to get the required api response instead of custom renderer.
-    #     response = super().retrieve(request, *args, **kwargs)
-    #     custom_response = dict()
-    #     print('Data', response.data)
-    #     custom_response["result"] = {"data": response.data}
-    #     custom_response["status_code"] = 200
-    #     custom_response["message"] = 'OK'
-    #     return Response(custom_response)
-
-
-class PostCreateAPIView(generics.CreateAPIView):
-    # POST /api/post/create/
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    # def create(self, request, *args, **kwargs):
-    #     # you can override this method to get the required api response instead of custom renderer.
-    #     response = super().create(request, *args, **kwargs)
-    #     custom_response = dict()
-    #     print('Data', response.data)
-    #     custom_response["result"] = {"data": response.data}
-    #     custom_response["status_code"] = 201
-    #     custom_response["message"] = 'Created'
-    #     return Response(custom_response, status=status.HTTP_201_CREATED)
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'update':
+            return UserInfoSerializer
+        return self.serializer_class
 
 
-class PostUpdateAPIView(generics.RetrieveUpdateAPIView):
-    # PUT /api/post/<int:pk>/update/
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    # lookup_field = 'pk'
-    permission_classes = [UserPostPermissions]
-
-
-    # def update(self, request, *args, **kwargs):
-    #     # you can override this method to get the required api response instead of custom renderer.
-    #     response = super().update(request, *args, **kwargs)
-    #     custom_response = dict()
-    #     print('Data', response.data)
-    #     custom_response["result"] = {"data": response.data}
-    #     custom_response["status_code"] = 200
-    #     custom_response["message"] = 'OK'
-    #     return Response(custom_response)
-
-
-class PostDeleteAPIView(generics.DestroyAPIView):
-    # DELETE api/products/<int:pk>/delete/
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    # lookup_field = 'pk'
-    permission_classes = [UserPostPermissions]
-
-
-class CreateTokenView(ObtainAuthToken):  # Override the default ObtainAuthToken
-    # POST api/auth/token/
+class TokenView(ObtainAuthToken):
+    # POST api/v2/auth/token/
     renderer_classes = [CustomApiRenderer]
     serializer_class = CustomAuthTokenSerializer
 
+    # generate token
+    @swagger_auto_schema(responses={200: ''})
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
         return Response({
-            # "user": UserInfoSerializer(user, context=self.get_serializer_context()).data,
             "user": UserInfoSerializer(user).data,
             "token": token.key
         })
 
+    @swagger_auto_schema(responses={200: ''})
+    def delete(self, request):
+        # not found in documentation(as far as I searched)
+        # Checking User and Token Table. It is one-to-one relationship.
+        request.user.auth_token.delete()  # simply delete the token to force a login
+        return Response(status=status.HTTP_200_OK)
 
+    def get_permissions(self):
+        # dynamically change the permission classes according to the request METHOD.
+
+        # To delete token , the user must be authenticated(must have token).
+        if self.request.method == 'DELETE':
+            self.permission_classes = [permissions.IsAuthenticated]
+
+        return [permission() for permission in self.permission_classes]
 
 
 class UserRegisterAPIView(generics.GenericAPIView):
-    # POST api/auth/register
     serializer_class = UserRegisterSerializer
 
+    @swagger_auto_schema(responses={200: ''})
     def post(self, request, *args, **kwargs):
-        # print('Request Data', request.data)
+        print('Request Data', request.data)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         print(serializer)
         user = serializer.save()
         print(user)
         print(user.password)
+
+        # create token and return this token
         token, created = Token.objects.get_or_create(user=user)
 
-
         return Response({
-            # "user": UserInfoSerializer(user, context=self.get_serializer_context()).data,
             "user": UserInfoSerializer(user).data,
             "token": token.key
         })
 
 
-
-
-class LogoutAPIView(APIView):
-    def get(self, request):
-        # not found in documentation
-        # Checking User and Token Table. It is one-to-one relationship.
-        request.user.auth_token.delete()  # simply delete the token to force a login
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 class PostSaveActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    def get(self, request, *args, **kwargs):
-        pk = kwargs['pk']
-        post = Post.objects.get(pk=pk)
+    renderer_classes = [rest_framework.renderers.JSONRenderer]
 
+    @swagger_auto_schema(responses={200: ''})
+    def post(self, request, *args, **kwargs):
+        pk = kwargs['pk']
+        post = get_object_or_404(Post, pk=pk)
+
+        # toggle save status
         if post in request.user.saved_posts.all():
             request.user.saved_posts.remove(post)
-            return Response({"state": "unsaved"}, status=status.HTTP_200_OK)
+            return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unsaved"}, status=status.HTTP_200_OK)
         else:
             request.user.saved_posts.add(post)
-            return Response({"state": "saved"}, status=status.HTTP_200_OK)
+            return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "saved"}, status=status.HTTP_200_OK)
 
 
 class PostLikeActionAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [rest_framework.renderers.JSONRenderer]
 
-    def get(self, request, *args, **kwargs):
+    @swagger_auto_schema(responses={200: ''})
+    def post(self, request, *args, **kwargs):
         pk = kwargs['pk']
-        post = Post.objects.get(pk=pk)
+        post = get_object_or_404(Post, pk=pk)
 
+        # toggle like status
         if post in request.user.liked_posts.all():
             request.user.liked_posts.remove(post)
-            return Response({"state": "unliked"}, status=status.HTTP_200_OK)
+            return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unliked"}, status=status.HTTP_200_OK)
         else:
             request.user.liked_posts.add(post)
-            return Response({"state": "liked"}, status=status.HTTP_200_OK)
+            return Response({"result": None, "status-code": status.HTTP_200_OK, "message": "liked"}, status=status.HTTP_200_OK)
 
 
-
-class CommentCreateAPIView(generics.CreateAPIView):
-    # POST /api/post/create/
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+class FollowAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    renderer_classes = [rest_framework.renderers.JSONRenderer]
 
+    @swagger_auto_schema(responses={200: ''})
+    def post(self, request, *args, **kwargs):
+        current_user = request.user  # login-user
+        pk = kwargs['pk']
+        profile_user = get_object_or_404(User, pk=pk)  # currently viewing profile-user
 
-class CommentDeleteAPIView(generics.DestroyAPIView):
-    # DELETE api/products/<int:pk>/delete/
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-    # lookup_field = 'pk'
-    permission_classes = [UserCommentPermissions]
+        # toggle follow status
+        if current_user in profile_user.followers.all():
+            profile_user.followers.remove(current_user)
+            return Response({"result": None, "status_code": status.HTTP_200_OK, "message": "unfollowed"},
+                            status=status.HTTP_200_OK)
+        else:
+            profile_user.followers.add(current_user)
+            return Response({"result": None, "status-code": status.HTTP_200_OK, "message": "followed"},
+                            status=status.HTTP_200_OK)
 
-
-class CommentUpdateAPIView(generics.RetrieveUpdateAPIView):
-    # PUT /api/post/<int:pk>/update/
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-    # lookup_field = 'pk'
-    permission_classes = [UserCommentPermissions]

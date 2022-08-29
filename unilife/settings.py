@@ -10,7 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# reads key-value pairs from a .env file and can set them as environment variables.
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mjm_6=$a7pbykyq88be5bwb$!a)_1gc&!sqdz#95^2w%n%un(('
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -36,10 +41,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # rest_api
+    'rest_framework',
+    'rest_framework.authtoken',
+
+    # Register your apps here
+    'accounts.apps.AccountsConfig',
     'post.apps.PostConfig',
     'api.apps.ApiConfig',
-    'rest_framework',
-    'rest_framework.authtoken'
+
+    # swagger
+    'drf_yasg',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -72,9 +86,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'unilife.wsgi.application'
 
+AUTH_USER_MODEL = "accounts.User"
+
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
+
+# For those who clone and test this repo, I left sqlite as the database in this repo for quick start.
+# You can define any database you like.
+# I use PostgreSQL in production.
 
 DATABASES = {
     'default': {
@@ -116,7 +136,15 @@ REST_FRAMEWORK = {
     ]
 }
 
-
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+        }
+    },
+}
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -141,3 +169,4 @@ MEDIA_URL = 'media/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
