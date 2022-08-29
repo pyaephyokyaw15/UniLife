@@ -26,7 +26,7 @@ The endpoint used in production is priavate. However, you can test on this [mock
 
 ## Entity–relationship Diagram
 > **Note:** Click and download the image to see details.
-![Entity–relationship model](https://github.com/pyaephyokyaw15/Whale/blob/main/ERD.png)
+![Entity–relationship model](https://github.com/pyaephyokyaw15/UniLife/blob/main/ERD.png]
 
 
 ## Quick Start
@@ -36,7 +36,7 @@ To get this project up and running locally on your computer:
 1. Clone the project.
 
    ```bash
-   git clone https://github.com/pyaephyokyaw15/Whale.git
+   git clone [https://github.com/pyaephyokyaw15/UniLife.git]
    ```
 1. Set up the Python development environment.
    > **Note:** I want to recommend using a Python virtual environment.
@@ -59,8 +59,9 @@ To get this project up and running locally on your computer:
 
 ## References
 
-* [Django Documentation](https://docs.djangoproject.com/en/4.1/)
-* [mdn web docs](https://developer.mozilla.org/en-US/docs/Learn)
+* [Django Documentation](https://docs.djangoproject.com/en/4.1/)  
+* [Django REST Framework](https://www.django-rest-framework.org/) 
+* [drf-yasg](https://drf-yasg.readthedocs.io/en/stable/)
 
 ## Author
 
